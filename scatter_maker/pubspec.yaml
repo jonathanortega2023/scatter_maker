@@ -41,6 +41,9 @@ dependencies:
   material_design_icons_flutter: ^7.0.7296
   flex_color_picker: ^3.3.0
   fl_chart: ^0.64.0
+  flutter_paypal: ^0.2.0
+  syncfusion_flutter_sliders: ^23.2.4
+  screenshot: ^2.1.0
 
 dev_dependencies:
   flutter_test:
