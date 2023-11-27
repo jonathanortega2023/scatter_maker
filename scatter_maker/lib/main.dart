@@ -45,88 +45,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class EquationField extends StatefulWidget {
-  const EquationField({super.key});
-
-  @override
-  State<EquationField> createState() => _EquationFieldState();
-}
-
-class _EquationFieldState extends State<EquationField> {
-  String? typedExpression;
-  late MathField mathField;
-  MathFieldEditingController? mathFieldController =
-      MathFieldEditingController();
-
-  @override
-  void initState() {
-    super.initState();
-    mathField = MathField(
-      variables: const ['X', 'T'],
-      controller: mathFieldController,
-      onChanged: updateExpression,
-      autofocus: true,
-      decoration: const InputDecoration(
-        border: OutlineInputBorder(),
-        hintText: 'Enter an expression w.r.t. X or T',
-        labelText: 'Expression',
-      ),
-      opensKeyboard: false,
-    );
-  }
-
-  void updateExpression(String value) {
-    setState(() {
-      typedExpression = value;
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Flexible(child: mathField);
-  }
-}
-
-class VariableSelector extends StatefulWidget {
-  const VariableSelector({super.key});
-
-  @override
-  State<VariableSelector> createState() => _VariableSelectorState();
-}
-
-class _VariableSelectorState extends State<VariableSelector> {
-  bool value = false;
-
-  late Switch variableToggle;
-  MaterialStateProperty<Icon> thumbIcon =
-      MaterialStateProperty.resolveWith<Icon>((Set<MaterialState> states) {
-    if (states.contains(MaterialState.selected)) {
-      return Icon(MdiIcons.alphaT);
-    }
-    return Icon(MdiIcons.alphaX);
-  });
-
-  @override
-  void initState() {
-    super.initState();
-    variableToggle =
-        Switch(value: value, onChanged: onChanged, thumbIcon: thumbIcon);
-  }
-
-  void onChanged(bool value) {
-    setState(() {
-      this.value = !value;
-    });
-    variableToggle =
-        Switch(value: value, onChanged: onChanged, thumbIcon: thumbIcon);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return variableToggle;
-  }
-}
-
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -143,6 +61,10 @@ class _MyHomePageState extends State<MyHomePage> {
   Color scatterFillColor = Colors.white;
   Color regressionLineColor = Colors.blue;
 
+  MathFieldEditingController? mathFieldController =
+      MathFieldEditingController();
+  String? typedExpression;
+  bool isTExpression = false;
   double lowerDomain = -10;
   double upperDomain = 10;
 
@@ -166,6 +88,9 @@ class _MyHomePageState extends State<MyHomePage> {
   String? regressionEquation;
 
   double chartAspectRatio = 1.8;
+  List<double> xValues = [];
+  List<double> yValues = [];
+  List<double> yValuesWithNoise = [];
 
   // TODO Fix chart saving, currently only saves the grid without labels
   RenderRepaintBoundary? chartRenderBoundary;
@@ -196,8 +121,8 @@ class _MyHomePageState extends State<MyHomePage> {
                   padding: const EdgeInsets.all(8.0),
                   child: Text("y = ", style: TextStyle(fontSize: 25)),
                 ),
-                EquationField(),
-                VariableSelector(),
+                equationField(),
+                variableToggle(),
                 lowerDomainForm(),
                 upperDomainForm(),
                 pointNumberForm(),
@@ -820,6 +745,45 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Flexible equationField() {
+    return Flexible(
+        child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: MathField(
+              variables: const ['X', 'T'],
+              controller: mathFieldController,
+              onChanged: (value) {
+                setState(() {
+                  typedExpression = value;
+                });
+              },
+              autofocus: true,
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
+                hintText: 'Enter an expression w.r.t. X or T',
+                labelText: 'Expression',
+              ),
+              opensKeyboard: false,
+            )));
+  }
+
+  Widget variableToggle() {
+    return Switch(
+        value: isTExpression,
+        onChanged: (bool value) {
+          setState(() {
+            isTExpression = !isTExpression;
+          });
+        },
+        thumbIcon: MaterialStateProperty.resolveWith<Icon>(
+            (Set<MaterialState> states) {
+          if (states.contains(MaterialState.selected)) {
+            return Icon(MdiIcons.alphaT);
+          }
+          return Icon(MdiIcons.alphaX);
+        }));
+  }
+
   // TODO Fix chart saving, currently only saves the grid without labels
   void saveChart() {
     screenshotController.capture().then((Uint8List? image) async {
@@ -834,5 +798,22 @@ class _MyHomePageState extends State<MyHomePage> {
       html.document.body!.children.remove(anchor);
       html.Url.revokeObjectUrl(url);
     });
+  }
+
+  void generateData() {
+    setState(() {
+      xValues = [];
+      yValues = [];
+      yValuesWithNoise = [];
+      for (int i = 0; i < numPoints; i++) {
+        xValues.add(lowerDomain + i * (upperDomain - lowerDomain) / numPoints);
+        yValues.add(0);
+        yValuesWithNoise.add(0);
+      }
+    });
+  }
+
+  double evaluateExpression() {
+    return 0;
   }
 }
