@@ -1,4 +1,5 @@
 import 'dart:html';
+import 'dart:math';
 import 'dart:ui' as ui;
 import 'dart:io' as io;
 import 'package:flutter/material.dart';
@@ -12,6 +13,7 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'dart:html' as html;
+import 'dart:math' as math;
 import 'package:screenshot/screenshot.dart';
 
 const donateLink =
@@ -163,51 +165,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     children: [
                       regressionOptions(),
                       // TODO Implement randomness
-                      Slider(
-                        value: 0,
-                        min: 0,
-                        max: 1,
-                        divisions: 1,
-                        label: "Randomness",
-                        onChanged: (value) {},
-                      ),
+                      randomnessSlider(),
                       const Divider(),
                       ButtonBar(
                         alignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ElevatedButton(
-                              onPressed: () {
-                                html.window.open(donateLink, 'new tab');
-                              },
-                              child: const Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Icon(Icons.paypal),
-                                  Text(
-                                    "Donate",
-                                    style: TextStyle(fontSize: 20),
-                                  )
-                                ],
-                              )),
+                          donateButton(),
                           Row(
                             children: [
-                              Padding(
-                                padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
-                                child: ElevatedButton(
-                                  // TODO Implement scattering
-                                  onPressed: () {},
-                                  child: const Text("Generate",
-                                      style: TextStyle(fontSize: 20)),
-                                ),
-                              ),
-                              ElevatedButton(
-                                onPressed: () {
-                                  saveChart();
-                                },
-                                child: const Text("Save",
-                                    style: TextStyle(fontSize: 20)),
-                              ),
+                              generateButton(),
+                              saveButton(),
                             ],
                           )
                         ],
@@ -226,8 +193,8 @@ class _MyHomePageState extends State<MyHomePage> {
                             chartAspectRatio = value;
                           });
                         },
-                        min: .6,
-                        max: 2,
+                        min: 0.6,
+                        max: 2.2,
                         interval: 0.2,
                         stepSize: 0.2,
                         showTicks: true,
@@ -245,6 +212,64 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Slider randomnessSlider() {
+    return Slider(
+      value: 0,
+      min: 0,
+      max: 1,
+      divisions: 1,
+      label: "Randomness",
+      onChanged: (value) {},
+    );
+  }
+
+  ElevatedButton saveButton() {
+    return ElevatedButton(
+      onPressed: () {
+        saveChart();
+      },
+      child: const Text("Save", style: TextStyle(fontSize: 20)),
+    );
+  }
+
+  Padding generateButton() {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(8, 0, 8, 0),
+      child: ElevatedButton(
+        // TODO Implement scattering
+        onPressed: () {
+          try {
+            generateData();
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(e.toString()),
+              ),
+            );
+          }
+        },
+        child: const Text("Generate", style: TextStyle(fontSize: 20)),
+      ),
+    );
+  }
+
+  ElevatedButton donateButton() {
+    return ElevatedButton(
+        onPressed: () {
+          html.window.open(donateLink, 'new tab');
+        },
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Icon(Icons.paypal),
+            Text(
+              "Donate",
+              style: TextStyle(fontSize: 20),
+            )
+          ],
+        ));
+  }
+
   Widget scatterChartGraph() {
     return Screenshot(
       controller: screenshotController,
@@ -260,17 +285,19 @@ class _MyHomePageState extends State<MyHomePage> {
             titlesData: FlTitlesData(
               topTitles: AxisTitles(
                   axisNameWidget: Text(chartTitle ?? "Title",
-                      style: TextStyle(fontSize: 30)),
+                      style: const TextStyle(fontSize: 30)),
                   axisNameSize: 40),
               leftTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: true, reservedSize: 30),
+                  sideTitles:
+                      const SideTitles(showTitles: true, reservedSize: 50),
                   axisNameWidget:
-                      Text(yLabel ?? "Y", style: TextStyle(fontSize: 20)),
+                      Text(yLabel ?? "Y", style: const TextStyle(fontSize: 20)),
                   axisNameSize: 30),
               bottomTitles: AxisTitles(
-                  sideTitles: SideTitles(showTitles: true, reservedSize: 30),
+                  sideTitles:
+                      const SideTitles(showTitles: true, reservedSize: 50),
                   axisNameWidget:
-                      Text(xLabel ?? "X", style: TextStyle(fontSize: 20)),
+                      Text(xLabel ?? "X", style: const TextStyle(fontSize: 20)),
                   axisNameSize: 30),
               rightTitles:
                   const AxisTitles(sideTitles: SideTitles(showTitles: false)),
@@ -801,19 +828,43 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void generateData() {
+    if (typedExpression == null) {
+      throw Exception("Expression is null");
+    }
+    if (typedExpression!.isEmpty) {
+      throw Exception("Expression is empty");
+    }
+    if (lowerDomain >= upperDomain) {
+      throw Exception("Domain is invalid");
+    }
+    typedExpression = '${TeXParser(typedExpression!).parse()}';
+    Expression functionExpression = Parser().parse(typedExpression!);
+    print(functionExpression);
+    ContextModel contextModel = ContextModel();
+    Variable expressionVariable = Variable(isTExpression ? 'T' : 'X');
+    contextModel.bindVariable(expressionVariable, functionExpression);
+    // set x values based on domain and number of points
+    xValues = List.generate(
+        numPoints,
+        (index) =>
+            lowerDomain + (upperDomain - lowerDomain) * index / numPoints);
+    // calculate true y values based on expression
+    // generate yValuesWithNoise based on true y values and randomness
+    yValues = xValues.map((x) {
+      contextModel.bindVariable(expressionVariable, Number(x));
+      return functionExpression.evaluate(EvaluationType.REAL, contextModel)
+          as double;
+    }).toList();
+    double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
+    // Generate yValuesWithNoise based on true y values and randomness.
+    final Random random = Random();
+    // yValuesWithNoise = trueYValues.map((y) {
+    //   double noise = random.nextDouble() * yRange * 0.1;
+    //   return y + noise;
+    // }).toList();
     setState(() {
-      xValues = [];
-      yValues = [];
-      yValuesWithNoise = [];
-      for (int i = 0; i < numPoints; i++) {
-        xValues.add(lowerDomain + i * (upperDomain - lowerDomain) / numPoints);
-        yValues.add(0);
-        yValuesWithNoise.add(0);
-      }
+      fakeScatterData = List.generate(numPoints,
+          (index) => ScatterSpot(xValues[index], yValues[index].toDouble()));
     });
-  }
-
-  double evaluateExpression() {
-    return 0;
   }
 }
