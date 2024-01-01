@@ -62,6 +62,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Color scatterBorderColor = Colors.purple;
   Color scatterFillColor = Colors.white;
   Color regressionLineColor = Colors.blue;
+  int colorPickerIndex = 0;
 
   MathFieldEditingController? mathFieldController =
       MathFieldEditingController();
@@ -69,6 +70,8 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isTExpression = false;
   double lowerDomain = -10;
   double upperDomain = 10;
+  double? lowerRange;
+  double? upperRange;
 
   double? lowerXAxis;
   double? upperXAxis;
@@ -127,6 +130,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 variableToggle(),
                 lowerDomainForm(),
                 upperDomainForm(),
+                lowerRangeForm(),
+                upperRangeForm(),
                 pointNumberForm(),
               ],
             ),
@@ -150,9 +155,10 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: const EdgeInsets.all(10.0),
               child: Row(
                 children: [
-                  scatterPointBorderPicker(),
-                  scatterPointFillPicker(),
-                  regressionLineColorPicker(),
+                  // scatterPointBorderPicker(),
+                  // scatterPointFillPicker(),
+                  // regressionLineColorPicker(),
+                  threeColorPicker(),
                 ],
               )),
           const Divider(),
@@ -277,6 +283,10 @@ class _MyHomePageState extends State<MyHomePage> {
         aspectRatio: chartAspectRatio,
         child: ScatterChart(
           ScatterChartData(
+            minX: lowerXAxis,
+            maxX: upperXAxis,
+            minY: lowerYAxis,
+            maxY: upperYAxis,
             scatterSpots: fakeScatterData,
             scatterTouchData: ScatterTouchData(enabled: false),
             showingTooltipIndicators: null,
@@ -659,7 +669,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: TextField(
           onChanged: (text) {
             setState(() {
-              upperYAxis = double.parse(text);
+              if (text.isEmpty) {
+                upperYAxis = null;
+              } else {
+                upperYAxis = double.parse(text);
+              }
             });
           },
           decoration: const InputDecoration(
@@ -679,7 +693,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: TextField(
           onChanged: (text) {
             setState(() {
-              lowerYAxis = double.parse(text);
+              if (text.isEmpty) {
+                lowerYAxis = null;
+              } else {
+                lowerYAxis = double.parse(text);
+              }
             });
           },
           decoration: const InputDecoration(
@@ -699,7 +717,11 @@ class _MyHomePageState extends State<MyHomePage> {
         child: TextField(
           onChanged: (text) {
             setState(() {
-              upperDomain = double.parse(text);
+              if (text.isEmpty) {
+                upperXAxis = null;
+              } else {
+                upperXAxis = double.parse(text);
+              }
             });
           },
           decoration: const InputDecoration(
@@ -719,13 +741,57 @@ class _MyHomePageState extends State<MyHomePage> {
         child: TextField(
           onChanged: (text) {
             setState(() {
-              lowerDomain = double.parse(text);
+              if (text.isEmpty) {
+                lowerXAxis = null;
+              } else {
+                lowerXAxis = double.parse(text);
+              }
             });
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'X axis min',
               labelText: 'X axis min'),
+          inputFormatters: domainFormatters,
+        ),
+      ),
+    );
+  }
+
+  Widget upperRangeForm() {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          onChanged: (text) {
+            setState(() {
+              upperRange = double.parse(text);
+            });
+          },
+          decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Range max',
+              labelText: 'Range max'),
+          inputFormatters: domainFormatters,
+        ),
+      ),
+    );
+  }
+
+  Widget lowerRangeForm() {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          onChanged: (text) {
+            setState(() {
+              lowerRange = double.parse(text);
+            });
+          },
+          decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Range min',
+              labelText: 'Range min'),
           inputFormatters: domainFormatters,
         ),
       ),
@@ -745,7 +811,7 @@ class _MyHomePageState extends State<MyHomePage> {
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'Domain max',
-              labelText: 'Domain max'),
+              labelText: '*Domain max'),
           inputFormatters: domainFormatters,
         ),
       ),
@@ -765,7 +831,7 @@ class _MyHomePageState extends State<MyHomePage> {
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
               hintText: 'Domain min',
-              labelText: 'Domain min'),
+              labelText: '*Domain min'),
           inputFormatters: domainFormatters,
         ),
       ),
@@ -774,6 +840,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Flexible equationField() {
     return Flexible(
+        flex: 2,
         child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: MathField(
@@ -784,10 +851,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   typedExpression = value;
                 });
               },
-              autofocus: true,
               decoration: const InputDecoration(
                 border: OutlineInputBorder(),
-                hintText: 'Enter an expression w.r.t. X or T',
+                hintText: '*Enter an expression w.r.t. X or T',
                 labelText: 'Expression',
               ),
               opensKeyboard: false,
@@ -809,6 +875,146 @@ class _MyHomePageState extends State<MyHomePage> {
           }
           return Icon(MdiIcons.alphaX);
         }));
+  }
+
+  threeColorPicker() {
+    return Row(
+      children: [
+        ButtonBar(
+          children: [
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  colorPickerIndex = 0;
+                });
+              },
+              child: Text("Point Border"),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    colorPickerIndex == 0
+                        ? Colors.blue.withOpacity(.25)
+                        : Colors.white),
+              ),
+            ),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: scatterBorderColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    scatterBorderColor = Colors.purple;
+                  });
+                },
+                icon: Icon(Icons.refresh)),
+            Spacer(),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  colorPickerIndex = 1;
+                });
+              },
+              child: Text("Point Fill"),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    colorPickerIndex == 1
+                        ? Colors.blue.withOpacity(.25)
+                        : Colors.white),
+              ),
+            ),
+            Stack(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
+                  decoration: BoxDecoration(
+                    color: scatterBorderColor,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: scatterFillColor,
+                      shape: BoxShape.circle,
+                    ),
+                    transform: Matrix4.translationValues(5, 5, 0))
+              ],
+            ),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    scatterFillColor = Colors.white;
+                  });
+                },
+                icon: Icon(Icons.refresh)),
+            Spacer(),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  colorPickerIndex = 2;
+                });
+              },
+              child: Text("Regression Line"),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    colorPickerIndex == 2
+                        ? Colors.blue.withOpacity(.25)
+                        : Colors.white),
+              ),
+            ),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: regressionLineColor,
+              ),
+            ),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    regressionLineColor = Colors.blue;
+                  });
+                },
+                icon: Icon(Icons.refresh)),
+          ],
+        ),
+        ColorPicker(
+          padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
+          borderColor: Colors.black,
+          hasBorder: true,
+          enableShadesSelection: false,
+          onColorChanged: (Color color) {
+            if (colorPickerIndex == 0) {
+              setState(() {
+                scatterBorderColor = color;
+              });
+            } else if (colorPickerIndex == 1) {
+              setState(() {
+                scatterFillColor = color;
+              });
+            } else if (colorPickerIndex == 2) {
+              setState(() {
+                regressionLineColor = color;
+              });
+            }
+          },
+          color: colorPickerIndex == 0
+              ? scatterBorderColor
+              : colorPickerIndex == 1
+                  ? scatterFillColor
+                  : regressionLineColor,
+          pickersEnabled: const <ColorPickerType, bool>{
+            ColorPickerType.accent: false,
+          },
+        )
+      ],
+    );
   }
 
   // TODO Fix chart saving, currently only saves the grid without labels
