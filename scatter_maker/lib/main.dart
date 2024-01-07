@@ -36,7 +36,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        sliderTheme: SliderThemeData(
+        sliderTheme: const SliderThemeData(
           showValueIndicator: ShowValueIndicator.always,
         ),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
@@ -95,12 +95,11 @@ class _MyHomePageState extends State<MyHomePage> {
   double chartAspectRatio = 1.8;
   List<double> xValues = [];
   List<double> yValues = [];
-  List<double> yValuesWithNoise = [];
+  List<double> yValuesNoisy = [];
+  List<double> xValuesFiltered = [];
+  List<double> yValuesNoisyFiltered = [];
 
-  // TODO Fix chart saving, currently only saves the grid without labels
-  RenderRepaintBoundary? chartRenderBoundary;
-
-  List<ScatterSpot> fakeScatterData = [
+  List<ScatterSpot> fakeScatterPoints = [
     ScatterSpot(1, 1),
     ScatterSpot(2, 2),
     ScatterSpot(3, 3),
@@ -119,11 +118,11 @@ class _MyHomePageState extends State<MyHomePage> {
       body: Column(
         children: [
           Padding(
-            padding: EdgeInsets.all(10.0),
+            padding: const EdgeInsets.all(10.0),
             child: Row(
               children: [
-                Padding(
-                  padding: const EdgeInsets.all(8.0),
+                const Padding(
+                  padding: EdgeInsets.all(8.0),
                   child: Text("y = ", style: TextStyle(fontSize: 25)),
                 ),
                 equationField(),
@@ -155,9 +154,6 @@ class _MyHomePageState extends State<MyHomePage> {
               padding: const EdgeInsets.all(10.0),
               child: Row(
                 children: [
-                  // scatterPointBorderPicker(),
-                  // scatterPointFillPicker(),
-                  // regressionLineColorPicker(),
                   threeColorPicker(),
                 ],
               )),
@@ -279,38 +275,48 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget scatterChartGraph() {
     return Screenshot(
       controller: screenshotController,
-      child: AspectRatio(
-        aspectRatio: chartAspectRatio,
-        child: ScatterChart(
-          ScatterChartData(
-            minX: lowerXAxis,
-            maxX: upperXAxis,
-            minY: lowerYAxis,
-            maxY: upperYAxis,
-            scatterSpots: fakeScatterData,
-            scatterTouchData: ScatterTouchData(enabled: false),
-            showingTooltipIndicators: null,
-            scatterLabelSettings: ScatterLabelSettings(showLabel: false),
-            backgroundColor: Colors.white,
-            titlesData: FlTitlesData(
-              topTitles: AxisTitles(
-                  axisNameWidget: Text(chartTitle ?? "Title",
-                      style: const TextStyle(fontSize: 30)),
-                  axisNameSize: 40),
-              leftTitles: AxisTitles(
-                  sideTitles:
-                      const SideTitles(showTitles: true, reservedSize: 50),
-                  axisNameWidget:
-                      Text(yLabel ?? "Y", style: const TextStyle(fontSize: 20)),
-                  axisNameSize: 30),
-              bottomTitles: AxisTitles(
-                  sideTitles:
-                      const SideTitles(showTitles: true, reservedSize: 50),
-                  axisNameWidget:
-                      Text(xLabel ?? "X", style: const TextStyle(fontSize: 20)),
-                  axisNameSize: 30),
-              rightTitles:
-                  const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+      child: Container(
+        color: Colors.white,
+        child: AspectRatio(
+          aspectRatio: chartAspectRatio,
+          child: ScatterChart(
+            ScatterChartData(
+              minX: lowerXAxis,
+              maxX: upperXAxis,
+              minY: lowerYAxis,
+              maxY: upperYAxis,
+              scatterSpots: _getScatterSpots(),
+              scatterTouchData: ScatterTouchData(enabled: false),
+              showingTooltipIndicators: null,
+              scatterLabelSettings: ScatterLabelSettings(showLabel: false),
+              backgroundColor: Colors.white,
+              titlesData: FlTitlesData(
+                show: true,
+                topTitles: AxisTitles(
+                    axisNameWidget: Text(chartTitle ?? "Title",
+                        style: const TextStyle(fontSize: 30)),
+                    axisNameSize: 40),
+                leftTitles: AxisTitles(
+                    sideTitles:
+                        const SideTitles(showTitles: true, reservedSize: 50),
+                    axisNameWidget: Text(yLabel ?? "Y",
+                        style: const TextStyle(fontSize: 20)),
+                    axisNameSize: 30),
+                bottomTitles: AxisTitles(
+                    sideTitles:
+                        const SideTitles(showTitles: true, reservedSize: 50),
+                    axisNameWidget: Text(xLabel ?? "X",
+                        style: const TextStyle(fontSize: 20)),
+                    axisNameSize: 30),
+                // Adds empty widget to have whitespace
+                rightTitles: AxisTitles(
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 20,
+                        getTitlesWidget: (numValue, titleValue) {
+                          return const SizedBox.shrink();
+                        })),
+              ),
             ),
           ),
         ),
@@ -328,7 +334,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 "Regression equation: ${regressionEquation ?? "Calculated upon generation"}"),
           ),
           ListTile(
-            title: Text("Polynomial Regression"),
+            title: const Text("Polynomial Regression"),
             trailing: Radio(
               value: 1,
               groupValue: selectedOption,
@@ -353,8 +359,8 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  const Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 16.0),
                     child: Text("Polynomial Degree"),
                   ),
                   Padding(
@@ -375,7 +381,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   CheckboxListTile(
-                    title: Text('Show Equation on Graph'),
+                    title: const Text('Show Equation on Graph'),
                     value: showPolynomialEquation,
                     onChanged: (value) {
                       setState(() {
@@ -384,7 +390,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                   ),
                   CheckboxListTile(
-                    title: Text('Show Correlation on Graph'),
+                    title: const Text('Show Correlation on Graph'),
                     value: showPolynomialCorrelation,
                     onChanged: (value) {
                       setState(() {
@@ -396,7 +402,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
           ListTile(
-            title: Text("Exponential Regression"),
+            title: const Text("Exponential Regression"),
             trailing: Radio(
               value: 2,
               groupValue: selectedOption,
@@ -422,7 +428,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   CheckboxListTile(
-                    title: Text('Show Equation on Graph'),
+                    title: const Text('Show Equation on Graph'),
                     value: showExponentialEquation,
                     onChanged: (value) {
                       setState(() {
@@ -431,7 +437,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     },
                   ),
                   CheckboxListTile(
-                    title: Text('Show Correlation on Graph'),
+                    title: const Text('Show Correlation on Graph'),
                     value: showExponentialCorrelation,
                     onChanged: (value) {
                       setState(() {
@@ -445,120 +451,6 @@ class _MyHomePageState extends State<MyHomePage> {
         ],
       ),
     );
-  }
-
-  Widget regressionLineColorPicker() {
-    return Flexible(
-        child: ColorPicker(
-      padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-      heading: ButtonBar(children: [
-        const Text("Regression line color:"),
-        Container(
-          width: 20,
-          height: 20,
-          decoration: BoxDecoration(
-            color: regressionLineColor,
-          ),
-        ),
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          onPressed: () {
-            setState(() {
-              regressionLineColor = Colors.blue;
-            });
-          },
-        ),
-      ]),
-      borderColor: Colors.black,
-      hasBorder: true,
-      color: regressionLineColor,
-      enableShadesSelection: false,
-      onColorChanged: updateRegressionLineColor,
-      pickersEnabled: const <ColorPickerType, bool>{
-        ColorPickerType.accent: false,
-      },
-    ));
-  }
-
-  ColorPicker scatterPointColorPicker(heading, color, onColorChanged) {
-    return ColorPicker(
-        // showColorCode: true,
-        // showColorName: true,
-        // showColorValue: true,
-        padding: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-        heading: heading,
-        borderColor: Colors.black,
-        hasBorder: true,
-        color: color,
-        enableShadesSelection: false,
-        onColorChanged: onColorChanged,
-        pickersEnabled: const <ColorPickerType, bool>{
-          ColorPickerType.accent: false,
-        });
-  }
-
-  Widget scatterPointBorderPicker() {
-    return Flexible(
-        child: scatterPointColorPicker(
-            ButtonBar(children: [
-              const Text("Scatter point border:"),
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: scatterBorderColor,
-                  shape: BoxShape.circle,
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () {
-                  setState(() {
-                    scatterBorderColor = Colors.purple;
-                  });
-                },
-              ),
-            ]),
-            scatterBorderColor,
-            updatePointBorderColor));
-  }
-
-  Widget scatterPointFillPicker() {
-    return Flexible(
-        child: scatterPointColorPicker(
-            ButtonBar(children: [
-              const Text("Scatter point fill:"),
-              Stack(
-                children: [
-                  Container(
-                    width: 20,
-                    height: 20,
-                    decoration: BoxDecoration(
-                      color: scatterBorderColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: scatterFillColor,
-                        shape: BoxShape.circle,
-                      ),
-                      transform: Matrix4.translationValues(5, 5, 0))
-                ],
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: () {
-                  setState(() {
-                    scatterFillColor = Colors.white;
-                  });
-                },
-              ),
-            ]),
-            scatterFillColor,
-            updatePointFillColor));
   }
 
   updateRegressionLineColor(Color color) {
@@ -675,6 +567,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 upperYAxis = double.parse(text);
               }
             });
+            _filterNoisyData();
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -699,6 +592,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 lowerYAxis = double.parse(text);
               }
             });
+            _filterNoisyData();
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -723,6 +617,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 upperXAxis = double.parse(text);
               }
             });
+            _filterNoisyData();
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -747,6 +642,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 lowerXAxis = double.parse(text);
               }
             });
+            _filterNoisyData();
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -767,6 +663,7 @@ class _MyHomePageState extends State<MyHomePage> {
             setState(() {
               upperRange = double.parse(text);
             });
+            _filterNoisyData();
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -787,6 +684,7 @@ class _MyHomePageState extends State<MyHomePage> {
             setState(() {
               lowerRange = double.parse(text);
             });
+            _filterNoisyData();
           },
           decoration: const InputDecoration(
               border: OutlineInputBorder(),
@@ -888,13 +786,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   colorPickerIndex = 0;
                 });
               },
-              child: Text("Point Border"),
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all<Color>(
                     colorPickerIndex == 0
                         ? Colors.blue.withOpacity(.25)
                         : Colors.white),
               ),
+              child: const Text("Point Border"),
             ),
             Container(
               width: 20,
@@ -910,21 +808,22 @@ class _MyHomePageState extends State<MyHomePage> {
                     scatterBorderColor = Colors.purple;
                   });
                 },
-                icon: Icon(Icons.refresh)),
-            Spacer(),
+                icon: Transform.flip(
+                    flipX: true, child: const Icon(Icons.refresh))),
+            const Spacer(),
             TextButton(
               onPressed: () {
                 setState(() {
                   colorPickerIndex = 1;
                 });
               },
-              child: Text("Point Fill"),
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all<Color>(
                     colorPickerIndex == 1
                         ? Colors.blue.withOpacity(.25)
                         : Colors.white),
               ),
+              child: const Text("Point Fill"),
             ),
             Stack(
               children: [
@@ -952,21 +851,22 @@ class _MyHomePageState extends State<MyHomePage> {
                     scatterFillColor = Colors.white;
                   });
                 },
-                icon: Icon(Icons.refresh)),
-            Spacer(),
+                icon: Transform.flip(
+                    flipX: true, child: const Icon(Icons.refresh))),
+            const Spacer(),
             TextButton(
               onPressed: () {
                 setState(() {
                   colorPickerIndex = 2;
                 });
               },
-              child: Text("Regression Line"),
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all<Color>(
                     colorPickerIndex == 2
                         ? Colors.blue.withOpacity(.25)
                         : Colors.white),
               ),
+              child: const Text("Regression Line"),
             ),
             Container(
               width: 20,
@@ -981,7 +881,8 @@ class _MyHomePageState extends State<MyHomePage> {
                     regressionLineColor = Colors.blue;
                   });
                 },
-                icon: Icon(Icons.refresh)),
+                icon: Transform.flip(
+                    flipX: true, child: const Icon(Icons.refresh))),
           ],
         ),
         ColorPicker(
@@ -1043,34 +944,106 @@ class _MyHomePageState extends State<MyHomePage> {
     if (lowerDomain >= upperDomain) {
       throw Exception("Domain is invalid");
     }
-    typedExpression = '${TeXParser(typedExpression!).parse()}';
-    Expression functionExpression = Parser().parse(typedExpression!);
-    print(functionExpression);
-    ContextModel contextModel = ContextModel();
-    Variable expressionVariable = Variable(isTExpression ? 'T' : 'X');
-    contextModel.bindVariable(expressionVariable, functionExpression);
-    // set x values based on domain and number of points
-    xValues = List.generate(
-        numPoints,
-        (index) =>
-            lowerDomain + (upperDomain - lowerDomain) * index / numPoints);
-    // calculate true y values based on expression
-    // generate yValuesWithNoise based on true y values and randomness
-    yValues = xValues.map((x) {
-      contextModel.bindVariable(expressionVariable, Number(x));
-      return functionExpression.evaluate(EvaluationType.REAL, contextModel)
-          as double;
-    }).toList();
-    double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
-    // Generate yValuesWithNoise based on true y values and randomness.
-    final Random random = Random();
-    // yValuesWithNoise = trueYValues.map((y) {
-    //   double noise = random.nextDouble() * yRange * 0.1;
-    //   return y + noise;
-    // }).toList();
+    if (lowerRange != null && upperRange != null) {
+      if (lowerRange! >= upperRange!) {
+        throw Exception("Range is invalid");
+      }
+    }
     setState(() {
-      fakeScatterData = List.generate(numPoints,
-          (index) => ScatterSpot(xValues[index], yValues[index].toDouble()));
+      typedExpression = '${TeXParser(typedExpression!).parse()}';
+      Expression functionExpression = Parser().parse(typedExpression!);
+      print(functionExpression);
+      ContextModel contextModel = ContextModel();
+      Variable expressionVariable = Variable(isTExpression ? 'T' : 'X');
+      contextModel.bindVariable(expressionVariable, functionExpression);
+      // set x values based on domain and number of points
+      xValues = List.generate(
+          numPoints,
+          (index) =>
+              lowerDomain + (upperDomain - lowerDomain) * index / numPoints);
+      // calculate true y values based on expression
+      // generate yValuesWithNoise based on true y values and randomness
+      yValues = xValues.map((x) {
+        contextModel.bindVariable(expressionVariable, Number(x));
+        return functionExpression.evaluate(EvaluationType.REAL, contextModel)
+            as double;
+      }).toList();
+      double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
+      // Generate yValuesWithNoise based on true y values and randomness.
+      final Random random = Random();
+      yValuesNoisy = yValues.map((y) {
+        double noise = random.nextDouble() * yRange * 0.1;
+        return y + noise;
+      }).toList();
+      if (lowerRange == null && upperRange == null) {
+        xValuesFiltered = xValues;
+        yValuesNoisyFiltered = yValuesNoisy;
+        return;
+      }
+      if (lowerRange != null) {
+        for (int i = 0; i < xValues.length; i++) {
+          if (yValuesNoisy[i] < lowerRange!) {
+            xValuesFiltered.add(xValues[i]);
+            yValuesNoisyFiltered.add(yValuesNoisy[i]);
+          }
+        }
+      }
+      if (upperRange != null) {
+        for (int i = 0; i < xValues.length; i++) {
+          if (yValuesNoisy[i] > upperRange!) {
+            xValuesFiltered.add(xValues[i]);
+            yValuesNoisyFiltered.add(yValuesNoisy[i]);
+          }
+        }
+      }
     });
+  }
+
+  _filterNoisyData() {
+    List<double> newXValues = [];
+    List<double> newYValuesNoisy = [];
+
+    if (yValuesNoisy.isEmpty) {
+      return;
+    }
+
+    Set<int> removalIndices = {};
+
+    for (int i = 0; i < yValuesNoisy.length; i++) {
+      if ((lowerRange != null && yValuesNoisy[i] < lowerRange!) ||
+          (upperRange != null && yValuesNoisy[i] > upperRange!) ||
+          (lowerXAxis != null && xValues[i] < lowerXAxis!) ||
+          (upperXAxis != null && xValues[i] > upperXAxis!) ||
+          (lowerYAxis != null && yValuesNoisy[i] < lowerYAxis!) ||
+          (upperYAxis != null && yValuesNoisy[i] > upperYAxis!)) {
+        removalIndices.add(i);
+      } else {
+        newXValues.add(xValues[i]);
+        newYValuesNoisy.add(yValuesNoisy[i]);
+      }
+    }
+
+    setState(() {
+      xValuesFiltered = newXValues;
+      yValuesNoisyFiltered = newYValuesNoisy;
+    });
+  }
+
+  _getScatterSpots() {
+    if (yValuesNoisy.isEmpty || yValuesNoisyFiltered.isEmpty) {
+      return fakeScatterPoints;
+    }
+    List<ScatterSpot> result = [];
+    for (int i = 0; i < yValuesNoisyFiltered.length; i++) {
+      result.add(ScatterSpot(xValues[i], yValuesNoisyFiltered[i],
+          radius: 8, color: scatterBorderColor));
+    }
+    if (scatterBorderColor != scatterFillColor) {
+      for (int i = 0; i < yValuesNoisyFiltered.length; i++) {
+        result.add(ScatterSpot(xValues[i], yValuesNoisyFiltered[i],
+            radius: 3, color: scatterFillColor));
+      }
+    }
+    return result;
   }
 }
