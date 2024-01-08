@@ -75,10 +75,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   double? lowerXAxis;
   double? upperXAxis;
+  double? xAxisInterval;
+
   double? lowerYAxis;
   double? upperYAxis;
+  double? yAxisInterval;
 
-  int numPoints = 50;
+  int numPoints = 200;
 
   String? xLabel;
   String? yLabel;
@@ -91,6 +94,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool showExponentialEquation = false;
   bool showExponentialCorrelation = false;
   String? regressionEquation;
+  double? randomnessStrength;
 
   double chartAspectRatio = 1.8;
   List<double> xValues = [];
@@ -141,9 +145,11 @@ class _MyHomePageState extends State<MyHomePage> {
               children: [
                 horizontalAxisMin(),
                 horizontalAxisMax(),
+                horizontalAxisInterval(),
                 xAxisLabelForm(),
                 verticalAxisMin(),
                 verticalAxisMax(),
+                verticalAxisInterval(),
                 yAxisLabelForm(),
                 titleLabelForm(),
               ],
@@ -159,55 +165,54 @@ class _MyHomePageState extends State<MyHomePage> {
               )),
           const Divider(),
           Flexible(
-            child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Row(children: [
-                Flexible(
-                  child: Column(
-                    children: [
-                      regressionOptions(),
-                      // TODO Implement randomness
-                      randomnessSlider(),
-                      const Divider(),
-                      ButtonBar(
-                        alignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          donateButton(),
-                          Row(
-                            children: [
-                              generateButton(),
-                              saveButton(),
-                            ],
-                          )
-                        ],
-                      ),
-                    ],
-                  ),
+            child: Row(children: [
+              Flexible(
+                child: Column(
+                  children: [
+                    regressionOptions(),
+                    // TODO Implement randomness
+                    randomnessSlider(),
+                    const Divider(),
+                    ButtonBar(
+                      alignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        donateButton(),
+                        Row(
+                          children: [
+                            generateButton(),
+                            saveButton(),
+                          ],
+                        )
+                      ],
+                    ),
+                  ],
                 ),
-                Flexible(
-                  child: Column(
-                    children: [
-                      // Text("Aspect Ratio"),
-                      SfSlider(
-                        value: chartAspectRatio,
-                        onChanged: (value) {
-                          setState(() {
-                            chartAspectRatio = value;
-                          });
-                        },
-                        min: 0.6,
-                        max: 2.2,
-                        interval: 0.2,
-                        stepSize: 0.2,
-                        showTicks: true,
-                        showLabels: true,
-                      ),
-                      scatterChartGraph(),
-                    ],
-                  ),
-                )
-              ]),
-            ),
+              ),
+              VerticalDivider(),
+              Flexible(
+                flex: 2,
+                child: Column(
+                  children: [
+                    // Text("Aspect Ratio"),
+                    SfSlider(
+                      value: chartAspectRatio,
+                      onChanged: (value) {
+                        setState(() {
+                          chartAspectRatio = value;
+                        });
+                      },
+                      min: 0.6,
+                      max: 2.2,
+                      interval: 0.2,
+                      stepSize: 0.2,
+                      showTicks: true,
+                      showLabels: true,
+                    ),
+                    scatterChartGraph(),
+                  ],
+                ),
+              )
+            ]),
           ),
         ],
       ),
@@ -216,12 +221,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Slider randomnessSlider() {
     return Slider(
-      value: 0,
+      value: randomnessStrength ?? 0,
+      onChanged: (value) {
+        setState(() {
+          randomnessStrength = value;
+        });
+        _makeDataNoisy();
+        _filterNoisyData();
+      },
       min: 0,
-      max: 1,
-      divisions: 1,
-      label: "Randomness",
-      onChanged: (value) {},
+      max: 5,
+      divisions: 20,
+      label: randomnessStrength?.toStringAsFixed(2),
     );
   }
 
@@ -297,14 +308,18 @@ class _MyHomePageState extends State<MyHomePage> {
                         style: const TextStyle(fontSize: 30)),
                     axisNameSize: 40),
                 leftTitles: AxisTitles(
-                    sideTitles:
-                        const SideTitles(showTitles: true, reservedSize: 50),
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        interval: yAxisInterval),
                     axisNameWidget: Text(yLabel ?? "Y",
                         style: const TextStyle(fontSize: 20)),
                     axisNameSize: 30),
                 bottomTitles: AxisTitles(
-                    sideTitles:
-                        const SideTitles(showTitles: true, reservedSize: 50),
+                    sideTitles: SideTitles(
+                        showTitles: true,
+                        reservedSize: 50,
+                        interval: xAxisInterval),
                     axisNameWidget: Text(xLabel ?? "X",
                         style: const TextStyle(fontSize: 20)),
                     axisNameSize: 30),
@@ -554,6 +569,26 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
+  Widget verticalAxisInterval() {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          onChanged: (text) {
+            setState(() {
+              yAxisInterval = double.parse(text);
+            });
+          },
+          decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'Y axis interval',
+              labelText: 'Y axis interval'),
+          inputFormatters: domainFormatters,
+        ),
+      ),
+    );
+  }
+
   Widget verticalAxisMax() {
     return Flexible(
       child: Padding(
@@ -598,6 +633,26 @@ class _MyHomePageState extends State<MyHomePage> {
               border: OutlineInputBorder(),
               hintText: 'Y axis min',
               labelText: 'Y axis min'),
+          inputFormatters: domainFormatters,
+        ),
+      ),
+    );
+  }
+
+  Widget horizontalAxisInterval() {
+    return Flexible(
+      child: Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: TextField(
+          onChanged: (text) {
+            setState(() {
+              xAxisInterval = double.parse(text);
+            });
+          },
+          decoration: const InputDecoration(
+              border: OutlineInputBorder(),
+              hintText: 'X axis interval',
+              labelText: 'X axis interval'),
           inputFormatters: domainFormatters,
         ),
       ),
@@ -968,34 +1023,23 @@ class _MyHomePageState extends State<MyHomePage> {
         return functionExpression.evaluate(EvaluationType.REAL, contextModel)
             as double;
       }).toList();
-      double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
-      // Generate yValuesWithNoise based on true y values and randomness.
-      final Random random = Random();
+      _makeDataNoisy();
+      _filterNoisyData();
+    });
+  }
+
+  _makeDataNoisy() {
+    final Random random = Random();
+    double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
+
+    setState(() {
       yValuesNoisy = yValues.map((y) {
-        double noise = random.nextDouble() * yRange * 0.1;
+        int sign = random.nextBool() ? 1 : -1;
+        double noise =
+            random.nextDouble() * yRange * 0.1 * (randomnessStrength ?? 0);
+        noise *= sign;
         return y + noise;
       }).toList();
-      if (lowerRange == null && upperRange == null) {
-        xValuesFiltered = xValues;
-        yValuesNoisyFiltered = yValuesNoisy;
-        return;
-      }
-      if (lowerRange != null) {
-        for (int i = 0; i < xValues.length; i++) {
-          if (yValuesNoisy[i] < lowerRange!) {
-            xValuesFiltered.add(xValues[i]);
-            yValuesNoisyFiltered.add(yValuesNoisy[i]);
-          }
-        }
-      }
-      if (upperRange != null) {
-        for (int i = 0; i < xValues.length; i++) {
-          if (yValuesNoisy[i] > upperRange!) {
-            xValuesFiltered.add(xValues[i]);
-            yValuesNoisyFiltered.add(yValuesNoisy[i]);
-          }
-        }
-      }
     });
   }
 
