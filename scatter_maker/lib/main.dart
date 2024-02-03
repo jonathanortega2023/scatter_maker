@@ -118,103 +118,105 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Column(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Row(
-              children: [
-                const Padding(
-                  padding: EdgeInsets.all(8.0),
-                  child: Text("y = ", style: TextStyle(fontSize: 25)),
-                ),
-                equationField(),
-                variableToggle(),
-                lowerDomainForm(),
-                upperDomainForm(),
-                lowerRangeForm(),
-                upperRangeForm(),
-                pointNumberForm(),
-              ],
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: Row(
-              children: [
-                horizontalAxisMin(),
-                horizontalAxisMax(),
-                horizontalAxisInterval(),
-                xAxisLabelForm(),
-                verticalAxisMin(),
-                verticalAxisMax(),
-                verticalAxisInterval(),
-                yAxisLabelForm(),
-                titleLabelForm(),
-              ],
-            ),
-          ),
-          const Divider(),
-          Padding(
+    return SafeArea(
+      child: Scaffold(
+        body: Column(
+          children: [
+            Padding(
               padding: const EdgeInsets.all(10.0),
               child: Row(
                 children: [
-                  threeColorPicker(),
+                  const Padding(
+                    padding: EdgeInsets.all(8.0),
+                    child: Text("y = ", style: TextStyle(fontSize: 25)),
+                  ),
+                  equationField(),
+                  variableToggle(),
+                  lowerDomainForm(),
+                  upperDomainForm(),
+                  // lowerRangeForm(),
+                  // upperRangeForm(),
+                  pointNumberForm(),
                 ],
-              )),
-          const Divider(),
-          Flexible(
-            child: Row(children: [
-              Flexible(
-                child: Column(
-                  children: [
-                    regressionOptions(),
-                    // TODO Implement randomness
-                    randomnessSlider(),
-                    const Divider(),
-                    ButtonBar(
-                      alignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        donateButton(),
-                        Row(
-                          children: [
-                            generateButton(),
-                            saveButton(),
-                          ],
-                        )
-                      ],
-                    ),
-                  ],
-                ),
               ),
-              VerticalDivider(),
-              Flexible(
-                flex: 2,
-                child: Column(
+            ),
+            Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: Row(
+                children: [
+                  horizontalAxisMin(),
+                  horizontalAxisMax(),
+                  horizontalAxisInterval(),
+                  xAxisLabelForm(),
+                  verticalAxisMin(),
+                  verticalAxisMax(),
+                  verticalAxisInterval(),
+                  yAxisLabelForm(),
+                  titleLabelForm(),
+                ],
+              ),
+            ),
+            const Divider(),
+            Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: Row(
                   children: [
-                    // Text("Aspect Ratio"),
-                    SfSlider(
-                      value: chartAspectRatio,
-                      onChanged: (value) {
-                        setState(() {
-                          chartAspectRatio = value;
-                        });
-                      },
-                      min: 0.6,
-                      max: 2.2,
-                      interval: 0.2,
-                      stepSize: 0.2,
-                      showTicks: true,
-                      showLabels: true,
-                    ),
-                    scatterChartGraph(),
+                    threeColorPicker(),
                   ],
+                )),
+            const Divider(),
+            Flexible(
+              child: Row(children: [
+                Flexible(
+                  child: Column(
+                    children: [
+                      regressionOptions(),
+                      // TODO Implement randomness
+                      randomnessSlider(),
+                      const Divider(),
+                      ButtonBar(
+                        alignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          donateButton(),
+                          Row(
+                            children: [
+                              generateButton(),
+                              saveButton(),
+                            ],
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
                 ),
-              )
-            ]),
-          ),
-        ],
+                VerticalDivider(),
+                Flexible(
+                  flex: 2,
+                  child: Column(
+                    children: [
+                      // Text("Aspect Ratio"),
+                      SfSlider(
+                        value: chartAspectRatio,
+                        onChanged: (value) {
+                          setState(() {
+                            chartAspectRatio = value;
+                          });
+                        },
+                        min: 0.6,
+                        max: 2.2,
+                        interval: 0.2,
+                        stepSize: 0.2,
+                        showTicks: true,
+                        showLabels: true,
+                      ),
+                      scatterChartGraph(),
+                    ],
+                  ),
+                )
+              ]),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1023,9 +1025,10 @@ class _MyHomePageState extends State<MyHomePage> {
         return functionExpression.evaluate(EvaluationType.REAL, contextModel)
             as double;
       }).toList();
-      _makeDataNoisy();
-      _filterNoisyData();
     });
+
+    _makeDataNoisy();
+    _filterNoisyData();
   }
 
   _makeDataNoisy() {
