@@ -153,17 +153,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
           const Divider(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              Expanded(child: threeColorPicker()),
-            ],
-          ),
+          threeColorPicker(),
           const Divider(),
-          Row(mainAxisSize: MainAxisSize.min, children: [
+          Row(children: [
             Expanded(
               flex: 2,
-              child: Column(mainAxisSize: MainAxisSize.min, children: [
+              child: Column(children: [
                 regressionOptions(),
                 randomnessSlider(),
                 const Divider(),
@@ -241,18 +236,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   ElevatedButton generateButton() {
     return ElevatedButton(
-        onPressed: () {
-          try {
-            generateData();
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(e.toString()),
-              ),
-            );
-          }
-        },
-        child: const Text("Generate", style: TextStyle(fontSize: 20)),
+      onPressed: () {
+        try {
+          generateData();
+        } catch (e) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+            ),
+          );
+        }
+      },
+      child: const Text("Generate", style: TextStyle(fontSize: 20)),
     );
   }
 
@@ -336,8 +331,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Column(
       children: [
         Text(
-              "Regression equation: ${regressionEquation ?? "Calculated upon generation"}"),
-        
+            "Regression equation: ${regressionEquation ?? "Calculated upon generation"}"),
         ListTile(
           title: const Text("Polynomial Regression"),
           trailing: Radio(
@@ -360,49 +354,49 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         if (selectedOption == 1)
           Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 16.0),
-                  child: Text("Polynomial Degree"),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
-                  child: SfSlider(
-                    value: polynomialDegree.toInt(),
-                    onChanged: (value) {
-                      setState(() {
-                        polynomialDegree = value.toInt();
-                      });
-                    },
-                    min: 0,
-                    max: 5,
-                    stepSize: 1,
-                    interval: 1,
-                    showTicks: true,
-                    showLabels: true,
-                  ),
-                ),
-                CheckboxListTile(
-                  title: const Text('Show Equation on Graph'),
-                  value: showPolynomialEquation,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 16.0),
+                child: Text("Polynomial Degree"),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                child: SfSlider(
+                  value: polynomialDegree.toInt(),
                   onChanged: (value) {
                     setState(() {
-                      showPolynomialEquation = value ?? false;
+                      polynomialDegree = value.toInt();
                     });
                   },
+                  min: 0,
+                  max: 5,
+                  stepSize: 1,
+                  interval: 1,
+                  showTicks: true,
+                  showLabels: true,
                 ),
-                CheckboxListTile(
-                  title: const Text('Show Correlation on Graph'),
-                  value: showPolynomialCorrelation,
-                  onChanged: (value) {
-                    setState(() {
-                      showPolynomialCorrelation = value ?? false;
-                    });
-                  },
-                ),
-              ],
-            ),
+              ),
+              CheckboxListTile(
+                title: const Text('Show Equation on Graph'),
+                value: showPolynomialEquation,
+                onChanged: (value) {
+                  setState(() {
+                    showPolynomialEquation = value ?? false;
+                  });
+                },
+              ),
+              CheckboxListTile(
+                title: const Text('Show Correlation on Graph'),
+                value: showPolynomialCorrelation,
+                onChanged: (value) {
+                  setState(() {
+                    showPolynomialCorrelation = value ?? false;
+                  });
+                },
+              ),
+            ],
+          ),
         ListTile(
           title: const Text("Exponential Regression"),
           trailing: Radio(
@@ -425,28 +419,28 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         if (selectedOption == 2)
           Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                CheckboxListTile(
-                  title: const Text('Show Equation on Graph'),
-                  value: showExponentialEquation,
-                  onChanged: (value) {
-                    setState(() {
-                      showExponentialEquation = value ?? false;
-                    });
-                  },
-                ),
-                CheckboxListTile(
-                  title: const Text('Show Correlation on Graph'),
-                  value: showExponentialCorrelation,
-                  onChanged: (value) {
-                    setState(() {
-                      showExponentialCorrelation = value ?? false;
-                    });
-                  },
-                ),
-              ],
-            ),
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              CheckboxListTile(
+                title: const Text('Show Equation on Graph'),
+                value: showExponentialEquation,
+                onChanged: (value) {
+                  setState(() {
+                    showExponentialEquation = value ?? false;
+                  });
+                },
+              ),
+              CheckboxListTile(
+                title: const Text('Show Correlation on Graph'),
+                value: showExponentialCorrelation,
+                onChanged: (value) {
+                  setState(() {
+                    showExponentialCorrelation = value ?? false;
+                  });
+                },
+              ),
+            ],
+          ),
       ],
     );
   }
@@ -733,149 +727,148 @@ class _MyHomePageState extends State<MyHomePage> {
           return Icon(MdiIcons.alphaX);
         }));
   }
-Widget threeColorPicker() {
-  return Row(
-    children: [
-      ButtonBar(
-        children: [
-          TextButton(
-            onPressed: () {
-              setState(() {
-                colorPickerIndex = 0;
-              });
-            },
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(
-                  colorPickerIndex == 0
-                      ? Colors.blue.withOpacity(.25)
-                      : Colors.white),
-            ),
-            child: const Text("Point Border"),
-          ),
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: scatterBorderColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          IconButton(
+
+  Widget threeColorPicker() {
+    return Row(
+      children: [
+        ButtonBar(
+          children: [
+            TextButton(
               onPressed: () {
                 setState(() {
-                  scatterBorderColor = Colors.purple;
+                  colorPickerIndex = 0;
                 });
               },
-              icon: Transform.flip(
-                  flipX: true, child: const Icon(Icons.refresh))),
-          const Spacer(),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                colorPickerIndex = 1;
-              });
-            },
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(
-                  colorPickerIndex == 1
-                      ? Colors.blue.withOpacity(.25)
-                      : Colors.white),
-            ),
-            child: const Text("Point Fill"),
-          ),
-          Stack(
-            children: [
-              Container(
-                width: 20,
-                height: 20,
-                decoration: BoxDecoration(
-                  color: scatterBorderColor,
-                  shape: BoxShape.circle,
-                ),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    colorPickerIndex == 0
+                        ? Colors.blue.withOpacity(.25)
+                        : Colors.white),
               ),
-              Container(
-                  width: 10,
-                  height: 10,
+              child: const Text("Point Border"),
+            ),
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: scatterBorderColor,
+                shape: BoxShape.circle,
+              ),
+            ),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    scatterBorderColor = Colors.purple;
+                  });
+                },
+                icon: Transform.flip(
+                    flipX: true, child: const Icon(Icons.refresh))),
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  colorPickerIndex = 1;
+                });
+              },
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    colorPickerIndex == 1
+                        ? Colors.blue.withOpacity(.25)
+                        : Colors.white),
+              ),
+              child: const Text("Point Fill"),
+            ),
+            Stack(
+              children: [
+                Container(
+                  width: 20,
+                  height: 20,
                   decoration: BoxDecoration(
-                    color: scatterFillColor,
+                    color: scatterBorderColor,
                     shape: BoxShape.circle,
                   ),
-                  transform: Matrix4.translationValues(5, 5, 0))
-            ],
-          ),
-          IconButton(
+                ),
+                Container(
+                    width: 10,
+                    height: 10,
+                    decoration: BoxDecoration(
+                      color: scatterFillColor,
+                      shape: BoxShape.circle,
+                    ),
+                    transform: Matrix4.translationValues(5, 5, 0))
+              ],
+            ),
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    scatterFillColor = Colors.white;
+                  });
+                },
+                icon: Transform.flip(
+                    flipX: true, child: const Icon(Icons.refresh))),
+            TextButton(
               onPressed: () {
                 setState(() {
-                  scatterFillColor = Colors.white;
+                  colorPickerIndex = 2;
                 });
               },
-              icon: Transform.flip(
-                  flipX: true, child: const Icon(Icons.refresh))),
-          const Spacer(),
-          TextButton(
-            onPressed: () {
-              setState(() {
-                colorPickerIndex = 2;
-              });
-            },
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.all<Color>(
-                  colorPickerIndex == 2
-                      ? Colors.blue.withOpacity(.25)
-                      : Colors.white),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    colorPickerIndex == 2
+                        ? Colors.blue.withOpacity(.25)
+                        : Colors.white),
+              ),
+              child: const Text("Regression Line"),
             ),
-            child: const Text("Regression Line"),
-          ),
-          Container(
-            width: 20,
-            height: 20,
-            decoration: BoxDecoration(
-              color: regressionLineColor,
+            Container(
+              width: 20,
+              height: 20,
+              decoration: BoxDecoration(
+                color: regressionLineColor,
+              ),
             ),
-          ),
-          IconButton(
-              onPressed: () {
-                setState(() {
-                  regressionLineColor = Colors.blue;
-                });
-              },
-              icon: Transform.flip(
-                  flipX: true, child: const Icon(Icons.refresh))),
-        ],
-      ),
-      Expanded(
-        child: ColorPicker(
-          borderColor: Colors.black,
-          hasBorder: true,
-          enableShadesSelection: false,
-          onColorChanged: (Color color) {
-            if (colorPickerIndex == 0) {
-              setState(() {
-                scatterBorderColor = color;
-              });
-            } else if (colorPickerIndex == 1) {
-              setState(() {
-                scatterFillColor = color;
-              });
-            } else if (colorPickerIndex == 2) {
-              setState(() {
-                regressionLineColor = color;
-              });
-            }
-          },
-          color: colorPickerIndex == 0
-              ? scatterBorderColor
-              : colorPickerIndex == 1
-                  ? scatterFillColor
-                  : regressionLineColor,
-          pickersEnabled: const <ColorPickerType, bool>{
-            ColorPickerType.accent: false,
-          },
+            IconButton(
+                onPressed: () {
+                  setState(() {
+                    regressionLineColor = Colors.blue;
+                  });
+                },
+                icon: Transform.flip(
+                    flipX: true, child: const Icon(Icons.refresh))),
+          ],
         ),
-      ),
-    ],
-  );
-}
+        Expanded(
+          child: ColorPicker(
+            borderColor: Colors.black,
+            hasBorder: true,
+            enableShadesSelection: false,
+            onColorChanged: (Color color) {
+              if (colorPickerIndex == 0) {
+                setState(() {
+                  scatterBorderColor = color;
+                });
+              } else if (colorPickerIndex == 1) {
+                setState(() {
+                  scatterFillColor = color;
+                });
+              } else if (colorPickerIndex == 2) {
+                setState(() {
+                  regressionLineColor = color;
+                });
+              }
+            },
+            color: colorPickerIndex == 0
+                ? scatterBorderColor
+                : colorPickerIndex == 1
+                    ? scatterFillColor
+                    : regressionLineColor,
+            pickersEnabled: const <ColorPickerType, bool>{
+              ColorPickerType.accent: false,
+            },
+          ),
+        ),
+      ],
+    );
+  }
 
   // TODO Fix chart saving, currently only saves the grid without labels
   void saveChart() {
