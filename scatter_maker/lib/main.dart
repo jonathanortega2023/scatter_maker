@@ -7,6 +7,8 @@ import 'dart:io' as io;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:flutter/widgets.dart';
 import 'package:math_keyboard/math_keyboard.dart';
 import "package:math_expressions/math_expressions.dart";
 import "package:simple_icons/simple_icons.dart";
@@ -16,6 +18,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'dart:html' as html;
 import 'dart:math' as math;
+import 'package:data/data.dart';
 import 'package:screenshot/screenshot.dart';
 import './widgets/buttons/icon_action_buttons.dart';
 import './widgets/buttons/color_action_buttons.dart';
@@ -23,6 +26,10 @@ import './widgets/buttons/color_action_buttons.dart';
 final domainFormatters = [
   LengthLimitingTextInputFormatter(7),
   FilteringTextInputFormatter.allow(RegExp(r'^-?\d*\.?\d{0,6}')),
+];
+final intervalFormatters = [
+  LengthLimitingTextInputFormatter(7),
+  FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
 ];
 
 void main() {
@@ -74,32 +81,33 @@ class _MyHomePageState extends State<MyHomePage> {
       MathFieldEditingController();
   String? typedExpression;
   bool isTExpression = false;
-  double lowerDomain = -10;
-  double upperDomain = 10;
+  double? lowerDomain;
+  double? upperDomain;
   double? lowerRange;
   double? upperRange;
 
-  double? lowerXAxis;
-  double? upperXAxis;
+  double lowerXAxis = 0;
+  double upperXAxis = 10;
   double? xAxisInterval;
 
   double? lowerYAxis;
   double? upperYAxis;
   double? yAxisInterval;
 
-  int numPoints = 200;
+  int numPoints = 100;
 
   String? xLabel;
   String? yLabel;
   String? chartTitle;
 
-  int? selectedOption;
+  int? selectedRegressionOption;
   int polynomialDegree = 2;
-  bool showPolynomialEquation = false;
-  bool showPolynomialCorrelation = false;
-  bool showExponentialEquation = false;
-  bool showExponentialCorrelation = false;
-  String? regressionEquation;
+  bool showRegressionEquation = true;
+  bool showRSquared = true;
+  double? rSquared;
+  String? regressionEquationString;
+  UnaryFunction<double>? regressionEquationFunction;
+
   double randomnessStrength = 0;
 
   double chartAspectRatio = 1.8;
@@ -133,18 +141,18 @@ class _MyHomePageState extends State<MyHomePage> {
               _kSizedBoxW40,
               Expanded(child: upperDomainForm()),
               _kSizedBoxW40,
-              // lowerRangeForm(),
-              // upperRangeForm(),
               Expanded(child: pointNumberForm()),
+              _kSizedBoxW40,
+              Expanded(child: titleLabelForm(), flex: 3),
             ],
           ),
           const Divider(),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              Expanded(child: horizontalAxisMin()),
+              Expanded(child: lowerXAxisForm()),
               _kSizedBoxW20,
-              Expanded(child: horizontalAxisMax()),
+              Expanded(child: upperXAxisForm()),
               _kSizedBoxW20,
               Expanded(child: horizontalAxisInterval()),
               _kSizedBoxW20,
@@ -158,7 +166,7 @@ class _MyHomePageState extends State<MyHomePage> {
               _kSizedBoxW20,
               Expanded(child: yAxisLabelForm(), flex: 2),
               _kSizedBoxW40,
-              Expanded(child: titleLabelForm(), flex: 3),
+              generateDataButton(),
             ],
           ),
           const Divider(),
@@ -177,13 +185,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   alignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const PaypalDonateButton(),
-                    Row(
-                      children: [
-                        generateDataButton(),
-                        _kSizedBoxW5,
-                        saveChartButton(),
-                      ],
-                    )
+                    saveChartButton(),
                   ],
                 ),
               ]),
@@ -231,6 +233,7 @@ class _MyHomePageState extends State<MyHomePage> {
           });
           _makeNoisyData();
           _filterNoisyData();
+          _getRegressionEquation();
         },
         min: 0,
         max: 100,
@@ -313,28 +316,28 @@ class _MyHomePageState extends State<MyHomePage> {
     return Column(
       children: [
         Text(
-            "Regression equation: ${regressionEquation ?? "Calculated upon generation"}"),
-        ListTile(
-          title: const Text("Polynomial Regression"),
-          trailing: Radio(
-            value: 1,
-            groupValue: selectedOption,
+            "Regression equation: ${regressionEquationString ?? "Calculated upon generation"}"),
+        Text("R^2: ${rSquared ?? "Calculated upon generation"}"),
+        CheckboxListTile(
+            title: const Text("Polynomial Regression"),
+            value: selectedRegressionOption == 0,
             onChanged: (value) {
               if (value == null) {
                 return;
               }
               setState(() {
-                selectedOption = value;
+                selectedRegressionOption = value ? 0 : null;
               });
-            },
-          ),
-          onTap: () {
-            setState(() {
-              selectedOption = 1;
-            });
-          },
-        ),
-        if (selectedOption == 1)
+              if (selectedRegressionOption == null) {
+                setState(() {
+                  regressionEquationString = null;
+                  rSquared = null;
+                });
+              } else {
+                _getRegressionEquation();
+              }
+            }),
+        if (selectedRegressionOption == 0)
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -343,13 +346,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text("Polynomial Degree"),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 0, 8),
+                padding: const EdgeInsets.fromLTRB(0, 0, 8, 8),
                 child: SfSlider(
                   value: polynomialDegree.toInt(),
                   onChanged: (value) {
                     setState(() {
                       polynomialDegree = value.toInt();
                     });
+                    _getRegressionEquation();
                   },
                   min: 0,
                   max: 5,
@@ -359,70 +363,39 @@ class _MyHomePageState extends State<MyHomePage> {
                   showLabels: true,
                 ),
               ),
-              CheckboxListTile(
-                title: const Text('Show Equation on Graph'),
-                value: showPolynomialEquation,
-                onChanged: (value) {
-                  setState(() {
-                    showPolynomialEquation = value ?? false;
-                  });
-                },
-              ),
-              CheckboxListTile(
-                title: const Text('Show Correlation on Graph'),
-                value: showPolynomialCorrelation,
-                onChanged: (value) {
-                  setState(() {
-                    showPolynomialCorrelation = value ?? false;
-                  });
-                },
-              ),
             ],
           ),
-        ListTile(
-          title: const Text("Exponential Regression"),
-          trailing: Radio(
-            value: 2,
-            groupValue: selectedOption,
+        CheckboxListTile(
+            title: const Text("Exponential Regression"),
+            value: selectedRegressionOption == 1,
             onChanged: (value) {
               if (value == null) {
                 return;
               }
               setState(() {
-                selectedOption = value;
+                selectedRegressionOption = value ? 1 : null;
               });
-            },
-          ),
-          onTap: () {
+              _getRegressionEquation();
+            }),
+        const Divider(),
+        CheckboxListTile(
+          title: const Text('Show Equation on Graph'),
+          value: showRegressionEquation,
+          onChanged: (value) {
             setState(() {
-              selectedOption = 2;
+              showRegressionEquation = value ?? false;
             });
           },
         ),
-        if (selectedOption == 2)
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              CheckboxListTile(
-                title: const Text('Show Equation on Graph'),
-                value: showExponentialEquation,
-                onChanged: (value) {
-                  setState(() {
-                    showExponentialEquation = value ?? false;
-                  });
-                },
-              ),
-              CheckboxListTile(
-                title: const Text('Show Correlation on Graph'),
-                value: showExponentialCorrelation,
-                onChanged: (value) {
-                  setState(() {
-                    showExponentialCorrelation = value ?? false;
-                  });
-                },
-              ),
-            ],
-          ),
+        CheckboxListTile(
+          title: const Text('Show R^2 on Graph'),
+          value: showRSquared,
+          onChanged: (value) {
+            setState(() {
+              showRSquared = value ?? false;
+            });
+          },
+        ),
       ],
     );
   }
@@ -506,15 +479,26 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget verticalAxisInterval() {
     return TextField(
       onChanged: (text) {
-        setState(() {
-          yAxisInterval = double.parse(text);
-        });
+        if (text.isEmpty || text == "." || text == "0.") {
+          return;
+        }
+
+        try {
+          final value = double.parse(text);
+          if (value != 0) {
+            setState(() {
+              yAxisInterval = value;
+            });
+          }
+        } catch (e) {
+          _snackBar("Invalid Y axis interval");
+        }
       },
       decoration: const InputDecoration(
           border: OutlineInputBorder(),
           hintText: 'Y axis interval',
           labelText: 'Y axis interval'),
-      inputFormatters: domainFormatters,
+      inputFormatters: intervalFormatters,
     );
   }
 
@@ -558,64 +542,88 @@ class _MyHomePageState extends State<MyHomePage> {
           border: OutlineInputBorder(),
           hintText: 'Y axis min',
           labelText: 'Y axis min'),
-      inputFormatters: domainFormatters,
+      inputFormatters: intervalFormatters,
     );
   }
 
   Widget horizontalAxisInterval() {
     return TextField(
       onChanged: (text) {
-        setState(() {
-          xAxisInterval = double.parse(text);
-        });
+        if (text.isEmpty || text == "." || text == "0.") {
+          return;
+        }
+
+        try {
+          final value = double.parse(text);
+          if (value != 0) {
+            setState(() {
+              xAxisInterval = value;
+            });
+          }
+        } catch (e) {
+          _snackBar("Invalid Y axis interval");
+        }
       },
       decoration: const InputDecoration(
           border: OutlineInputBorder(),
           hintText: 'X axis interval',
           labelText: 'X axis interval'),
-      inputFormatters: domainFormatters,
+      inputFormatters: intervalFormatters,
     );
   }
 
-  Widget horizontalAxisMax() {
+  Widget upperXAxisForm() {
     return TextField(
       onChanged: (text) {
+        if (text.isEmpty || text == "-" || text == "." || text == "-.") {
+          return;
+        }
+        double textValue;
+        try {
+          textValue = double.parse(text);
+        } catch (e) {
+          _snackBar("Invalid X axis max");
+          return;
+        }
         setState(() {
-          if (text.isEmpty) {
-            upperXAxis = null;
-          } else if (text == "-") {
-            upperXAxis = null;
-          } else {
-            upperXAxis = double.parse(text);
-          }
+          upperXAxis = textValue;
         });
+        _filterNoisyData();
+      },
+      onEditingComplete: () {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
           border: OutlineInputBorder(),
-          hintText: 'X axis max',
+          hintText: 'X max',
           labelText: 'X axis max'),
       inputFormatters: domainFormatters,
     );
   }
 
-  Widget horizontalAxisMin() {
+  Widget lowerXAxisForm() {
     return TextField(
       onChanged: (text) {
+        if (text.isEmpty || text == "-" || text == "." || text == "-.") {
+          return;
+        }
+        double textValue;
+        try {
+          textValue = double.parse(text);
+        } catch (e) {
+          _snackBar("Invalid X axis min");
+          return;
+        }
         setState(() {
-          if (text.isEmpty) {
-            lowerXAxis = null;
-          } else if (text == "-") {
-            lowerXAxis = null;
-          } else {
-            lowerXAxis = double.parse(text);
-          }
+          lowerXAxis = textValue;
         });
+      },
+      onEditingComplete: () {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
           border: OutlineInputBorder(),
-          hintText: 'X axis min',
+          hintText: 'X min',
           labelText: 'X axis min'),
       inputFormatters: domainFormatters,
     );
@@ -663,7 +671,7 @@ class _MyHomePageState extends State<MyHomePage> {
       decoration: const InputDecoration(
           border: OutlineInputBorder(),
           hintText: 'Domain max',
-          labelText: '*Domain max'),
+          labelText: 'Domain max'),
       inputFormatters: domainFormatters,
     );
   }
@@ -678,7 +686,7 @@ class _MyHomePageState extends State<MyHomePage> {
       decoration: const InputDecoration(
           border: OutlineInputBorder(),
           hintText: 'Domain min',
-          labelText: '*Domain min'),
+          labelText: 'Domain min'),
       inputFormatters: domainFormatters,
     );
   }
@@ -694,7 +702,7 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       decoration: const InputDecoration(
         border: OutlineInputBorder(),
-        hintText: '*Enter an expression w.r.t. X',
+        hintText: 'Enter an expression w.r.t. X',
         labelText: 'Expression',
       ),
       opensKeyboard: false,
@@ -826,25 +834,26 @@ class _MyHomePageState extends State<MyHomePage> {
       _snackBar("Expression is empty");
       throw Exception("Expression is empty");
     }
-    if (lowerDomain >= upperDomain) {
-      throw Exception("Domain is invalid");
+    if (lowerXAxis! >= upperXAxis!) {
+      _snackBar("X axis is invalid");
+      throw Exception("X axis is invalid");
     }
-    if (lowerRange != null && upperRange != null) {
-      if (lowerRange! >= upperRange!) {
-        throw Exception("Range is invalid");
+    if (lowerDomain != null && upperDomain != null) {
+      if (lowerDomain! >= upperDomain!) {
+        _snackBar("Domain is invalid");
+        throw Exception("Domain is invalid");
       }
     }
-    if (lowerXAxis != null && upperXAxis != null) {
-      if (lowerXAxis! >= upperXAxis!) {
-        _snackBar("X axis is invalid");
-        throw Exception("X axis is invalid");
+    if (lowerYAxis != null && upperYAxis != null) {
+      if (lowerYAxis! >= upperYAxis!) {
+        _snackBar("Y axis is invalid");
+        throw Exception("Y axis is invalid");
       }
     }
     String texExpression;
     try {
       texExpression = '${TeXParser(typedExpression!).parse()}';
     } catch (e) {
-      // snackbar
       _snackBar("Invalid expression");
       throw Exception("Invalid expression");
     }
@@ -852,6 +861,7 @@ class _MyHomePageState extends State<MyHomePage> {
     try {
       functionExpression = Parser().parse(texExpression);
     } catch (e) {
+      _snackBar("Invalid expression");
       throw Exception("Invalid expression");
     }
     Variable expressionVariable = Variable('X');
@@ -863,7 +873,7 @@ class _MyHomePageState extends State<MyHomePage> {
       xValues = List.generate(
           numPoints,
           (index) =>
-              lowerDomain + (upperDomain - lowerDomain) * index / numPoints);
+              lowerXAxis + (upperXAxis - lowerXAxis) * index / numPoints);
       // calculate true y values based on expression
       // generate yValuesWithNoise based on true y values and randomness
       yValues = xValues.map((x) {
@@ -903,16 +913,22 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     for (int i = 0; i < yValuesNoisy.length; i++) {
-      if (lowerXAxis != null && xValues[i] < lowerXAxis!) {
+      if (xValues[i] < lowerXAxis) {
         continue;
       }
-      if (upperXAxis != null && xValues[i] > upperXAxis!) {
+      if (xValues[i] > upperXAxis) {
         continue;
       }
       if (lowerYAxis != null && yValuesNoisy[i] < lowerYAxis!) {
         continue;
       }
       if (upperYAxis != null && yValuesNoisy[i] > upperYAxis!) {
+        continue;
+      }
+      if (lowerDomain != null && xValues[i] < lowerDomain!) {
+        continue;
+      }
+      if (upperDomain != null && xValues[i] > upperDomain!) {
         continue;
       }
       newXValues.add(xValues[i]);
@@ -944,7 +960,102 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _snackBar(String message) {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(message)));
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(
+      message,
+      style: const TextStyle(
+        fontSize: 20,
+      ),
+    )));
+  }
+
+  void _getRegressionEquation() {
+    if (selectedRegressionOption == null) {
+      return;
+    }
+
+    if (selectedRegressionOption == 0) {
+      final fitter = PolynomialRegression(degree: polynomialDegree);
+      final result = fitter.fit(
+          xs: xValuesFiltered.toVector(), ys: yValuesNoisyFiltered.toVector());
+
+      // Calculate R-squared
+      setState(() {
+        regressionEquationFunction = result.function;
+      });
+      _calculateR2();
+
+      // Format the regression equation
+      String stringResult = result.polynomial.format(
+        variable: isTExpression ? 'T' : 'X',
+      );
+      String formattedResult = _formatEquationString(stringResult);
+
+      setState(() {
+        regressionEquationString = formattedResult;
+      });
+    } else if (selectedRegressionOption == 1) {
+      // Exponential Regression: y = a * e^(bx)
+      return;
+    }
+  }
+
+  String _formatEquationString(String equation) {
+    String formattedResult = "";
+    var terms = equation.split(" + ");
+    for (var term in terms) {
+      double coefficient;
+      if (!term.contains("X") && !term.contains("T")) {
+        coefficient = double.parse(term);
+        if (coefficient.abs() <= 0.001) continue;
+        formattedResult += coefficient < 0 ? " - " : " + ";
+        formattedResult += coefficient.abs().toStringAsFixed(2);
+        continue;
+      } else if (term.contains("X")) {
+        coefficient = double.parse(term.split("X")[0]);
+        if (coefficient.abs() <= 0.001) continue;
+        formattedResult += coefficient < 0 ? " - " : " + ";
+        formattedResult += coefficient.abs().toStringAsFixed(2);
+        formattedResult += "X" + term.split("X")[1];
+      } else if (term.contains("T")) {
+        coefficient = double.parse(term.split("T")[0]);
+        if (coefficient.abs() <= 0.001) continue;
+        formattedResult += coefficient < 0 ? " - " : " + ";
+        formattedResult += coefficient.abs().toStringAsFixed(2);
+        formattedResult += "T" + term.split("T")[1];
+      }
+    }
+    if (formattedResult.startsWith(" + ")) {
+      formattedResult = formattedResult.substring(3);
+    }
+    return formattedResult;
+  }
+
+  void _calculateR2() {
+    // Calculate the mean of y
+    final int n = yValuesNoisyFiltered.length;
+    final double meanY = yValuesNoisyFiltered.reduce((a, b) => a + b) / n;
+
+    // Calculate the total sum of squares (SST)
+    final double sst = yValuesNoisyFiltered.fold(
+        0, (prev, yi) => prev + (yi - meanY) * (yi - meanY));
+
+    // Calculate the residual sum of squares (SSE)
+    double sse = 0;
+    for (int i = 0; i < n; i++) {
+      final double predictedY = regressionEquationFunction!(xValuesFiltered[i]);
+      final double error = yValuesNoisyFiltered[i] - predictedY;
+      sse += error * error;
+    }
+
+    // Calculate R-squared
+    final double r2 = 1 - (sse / sst);
+
+    // Update the state
+    setState(() {
+      rSquared = r2.toPrecision(4);
+    });
   }
 }
+
+typedef Printer<T> = String Function(T value);

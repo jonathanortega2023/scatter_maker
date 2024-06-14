@@ -26,8 +26,10 @@ class ColorPickerActionButton extends StatelessWidget {
         TextButton(
             onPressed: onPressed,
             style: ButtonStyle(
+              side: WidgetStateProperty.all<BorderSide>(BorderSide(
+                  color: selected ? Colors.black : Colors.black45, width: 2)),
               backgroundColor: WidgetStateProperty.all<Color>(
-                  selected ? Colors.blue.withOpacity(.25) : Colors.white),
+                  selected ? Colors.blue.withOpacity(.1) : Colors.white),
             ),
             child: Text(
               text,
