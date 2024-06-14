@@ -17,10 +17,8 @@ import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'dart:html' as html;
 import 'dart:math' as math;
 import 'package:screenshot/screenshot.dart';
-
-const donateLink =
-    "https://www.paypal.com/donate/?business=C8ES9DJA6YMBQ&no_recurring=0&currency_code=USD";
-final donateURI = Uri.parse(donateLink);
+import './widgets/buttons/icon_action_buttons.dart';
+import './widgets/buttons/color_action_buttons.dart';
 
 final domainFormatters = [
   LengthLimitingTextInputFormatter(7),
@@ -28,6 +26,7 @@ final domainFormatters = [
 ];
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
 }
 
@@ -49,6 +48,10 @@ class MyApp extends StatelessWidget {
   }
 }
 
+const SizedBox _kSizedBoxW5 = SizedBox(width: 5);
+const SizedBox _kSizedBoxW20 = SizedBox(width: 20);
+const SizedBox _kSizedBoxW40 = SizedBox(width: 40);
+
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
 
@@ -59,6 +62,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _scaffoldKey = GlobalKey<ScaffoldState>();
   ScreenshotController screenshotController = ScreenshotController();
 
   Color scatterBorderColor = Colors.purple;
@@ -105,33 +109,30 @@ class _MyHomePageState extends State<MyHomePage> {
   List<double> xValuesFiltered = [];
   List<double> yValuesNoisyFiltered = [];
 
-  List<ScatterSpot> fakeScatterPoints = [
-    ScatterSpot(1, 1),
-    ScatterSpot(2, 2),
-    ScatterSpot(3, 3),
-    ScatterSpot(4, 4),
-    ScatterSpot(5, 5),
-    ScatterSpot(6, 6),
-    ScatterSpot(7, 7),
-    ScatterSpot(8, 8),
-    ScatterSpot(9, 9),
-    ScatterSpot(10, 10),
-  ];
+  List<ScatterSpot> fakeScatterPoints = List.generate(51, (index) {
+    return ScatterSpot(index.toDouble(), index.toDouble(),
+        radius: 8, color: Colors.accents[index % Colors.accents.length]);
+  });
 
   @override
   Widget build(BuildContext context) {
     return SafeArea(
         child: Scaffold(
+      key: _scaffoldKey,
+      backgroundColor: Colors.white,
       body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
         child: Column(children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              const Text("y =", style: TextStyle(fontSize: 25)),
+              const Text("y = ", style: TextStyle(fontSize: 25)),
               Expanded(child: equationField(), flex: 2),
-              Expanded(child: variableToggle()),
+              _kSizedBoxW20,
               Expanded(child: lowerDomainForm()),
+              _kSizedBoxW40,
               Expanded(child: upperDomainForm()),
+              _kSizedBoxW40,
               // lowerRangeForm(),
               // upperRangeForm(),
               Expanded(child: pointNumberForm()),
@@ -142,13 +143,21 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               Expanded(child: horizontalAxisMin()),
+              _kSizedBoxW20,
               Expanded(child: horizontalAxisMax()),
+              _kSizedBoxW20,
               Expanded(child: horizontalAxisInterval()),
+              _kSizedBoxW20,
               Expanded(child: xAxisLabelForm(), flex: 2),
+              _kSizedBoxW40,
               Expanded(child: verticalAxisMin()),
+              _kSizedBoxW20,
               Expanded(child: verticalAxisMax()),
+              _kSizedBoxW20,
               Expanded(child: verticalAxisInterval()),
+              _kSizedBoxW20,
               Expanded(child: yAxisLabelForm(), flex: 2),
+              _kSizedBoxW40,
               Expanded(child: titleLabelForm(), flex: 3),
             ],
           ),
@@ -161,15 +170,18 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Column(children: [
                 regressionOptions(),
                 randomnessSlider(),
-                const Divider(),
+                const Divider(
+                  color: Colors.black,
+                ),
                 ButtonBar(
                   alignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    donateButton(),
+                    const PaypalDonateButton(),
                     Row(
                       children: [
-                        generateButton(),
-                        saveButton(),
+                        generateDataButton(),
+                        _kSizedBoxW5,
+                        saveChartButton(),
                       ],
                     )
                   ],
@@ -208,64 +220,34 @@ class _MyHomePageState extends State<MyHomePage> {
     ));
   }
 
-  Slider randomnessSlider() {
-    return Slider(
-      value: randomnessStrength * 10,
-      onChanged: (value) {
-        setState(() {
-          randomnessStrength = value / 10;
-        });
-        _makeDataNoisy();
-        _filterNoisyData();
-      },
-      min: 0,
-      max: 100,
-      divisions: 20,
-      label: randomnessStrength.toStringAsFixed(2),
-    );
-  }
-
-  ElevatedButton saveButton() {
-    return ElevatedButton(
-      onPressed: () {
-        saveChart();
-      },
-      child: const Text("Save", style: TextStyle(fontSize: 20)),
-    );
-  }
-
-  ElevatedButton generateButton() {
-    return ElevatedButton(
-      onPressed: () {
-        try {
-          generateData();
-        } catch (e) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-            ),
-          );
-        }
-      },
-      child: const Text("Generate", style: TextStyle(fontSize: 20)),
-    );
-  }
-
-  ElevatedButton donateButton() {
-    return ElevatedButton(
-        onPressed: () {
-          html.window.open(donateLink, 'new tab');
+  randomnessSlider() {
+    return AbsorbPointer(
+      absorbing: yValues.isEmpty,
+      child: Slider(
+        value: randomnessStrength * 10,
+        onChanged: (value) {
+          setState(() {
+            randomnessStrength = value / 10;
+          });
+          _makeNoisyData();
+          _filterNoisyData();
         },
-        child: const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Icon(Icons.paypal),
-            Text(
-              "Donate",
-              style: TextStyle(fontSize: 20),
-            )
-          ],
-        ));
+        min: 0,
+        max: 100,
+        divisions: 20,
+        label: randomnessStrength.toStringAsFixed(2),
+      ),
+    );
+  }
+
+  IconActionButton saveChartButton() {
+    return IconActionButton(
+        text: 'Save Chart', icon: Icons.download, onPressed: saveChart);
+  }
+
+  IconActionButton generateDataButton() {
+    return IconActionButton(
+        text: 'Generate Data', icon: Icons.refresh, onPressed: generateData);
   }
 
   Widget scatterChartGraph() {
@@ -542,6 +524,8 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           if (text.isEmpty) {
             upperYAxis = null;
+          } else if (text == "-") {
+            upperYAxis = null;
           } else {
             upperYAxis = double.parse(text);
           }
@@ -561,6 +545,8 @@ class _MyHomePageState extends State<MyHomePage> {
       onChanged: (text) {
         setState(() {
           if (text.isEmpty) {
+            lowerYAxis = null;
+          } else if (text == "-") {
             lowerYAxis = null;
           } else {
             lowerYAxis = double.parse(text);
@@ -597,6 +583,8 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           if (text.isEmpty) {
             upperXAxis = null;
+          } else if (text == "-") {
+            upperXAxis = null;
           } else {
             upperXAxis = double.parse(text);
           }
@@ -616,6 +604,8 @@ class _MyHomePageState extends State<MyHomePage> {
       onChanged: (text) {
         setState(() {
           if (text.isEmpty) {
+            lowerXAxis = null;
+          } else if (text == "-") {
             lowerXAxis = null;
           } else {
             lowerXAxis = double.parse(text);
@@ -704,28 +694,11 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       decoration: const InputDecoration(
         border: OutlineInputBorder(),
-        hintText: '*Enter an expression w.r.t. X or T',
+        hintText: '*Enter an expression w.r.t. X',
         labelText: 'Expression',
       ),
       opensKeyboard: false,
     );
-  }
-
-  Widget variableToggle() {
-    return Switch(
-        value: isTExpression,
-        onChanged: (bool value) {
-          setState(() {
-            isTExpression = !isTExpression;
-          });
-        },
-        thumbIcon: MaterialStateProperty.resolveWith<Icon>(
-            (Set<MaterialState> states) {
-          if (states.contains(MaterialState.selected)) {
-            return Icon(MdiIcons.alphaT);
-          }
-          return Icon(MdiIcons.alphaX);
-        }));
   }
 
   Widget threeColorPicker() {
@@ -733,109 +706,73 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         ButtonBar(
           children: [
-            TextButton(
+            ColorPickerActionButton(
+              text: "Point Border",
+              selected: colorPickerIndex == 0,
               onPressed: () {
                 setState(() {
                   colorPickerIndex = 0;
                 });
               },
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
-                    colorPickerIndex == 0
-                        ? Colors.blue.withOpacity(.25)
-                        : Colors.white),
-              ),
-              child: const Text("Point Border"),
+              sampleDisplay:
+                  PointBorderSample(scatterBorderColor: scatterBorderColor),
+              resetFunction: () {
+                setState(() {
+                  scatterBorderColor = Colors.purple;
+                });
+              },
             ),
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: scatterBorderColor,
-                shape: BoxShape.circle,
-              ),
-            ),
-            IconButton(
-                onPressed: () {
-                  setState(() {
-                    scatterBorderColor = Colors.purple;
-                  });
-                },
-                icon: Transform.flip(
-                    flipX: true, child: const Icon(Icons.refresh))),
-            TextButton(
+            const Text('|', style: TextStyle(fontSize: 30, color: Colors.grey)),
+            ColorPickerActionButton(
+              text: "Point Fill",
+              selected: colorPickerIndex == 1,
               onPressed: () {
                 setState(() {
                   colorPickerIndex = 1;
                 });
               },
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
-                    colorPickerIndex == 1
-                        ? Colors.blue.withOpacity(.25)
-                        : Colors.white),
-              ),
-              child: const Text("Point Fill"),
+              sampleDisplay: FilledPointSample(
+                  scatterBorderColor: scatterBorderColor,
+                  scatterFillColor: scatterFillColor),
+              resetFunction: () {
+                setState(() {
+                  scatterFillColor = Colors.white;
+                });
+              },
             ),
-            Stack(
-              children: [
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: scatterBorderColor,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: scatterFillColor,
-                      shape: BoxShape.circle,
-                    ),
-                    transform: Matrix4.translationValues(5, 5, 0))
-              ],
-            ),
-            IconButton(
-                onPressed: () {
-                  setState(() {
-                    scatterFillColor = Colors.white;
-                  });
-                },
-                icon: Transform.flip(
-                    flipX: true, child: const Icon(Icons.refresh))),
-            TextButton(
+            const Text('|', style: TextStyle(fontSize: 30, color: Colors.grey)),
+            ColorPickerActionButton(
+              text: "Regression Line",
+              selected: colorPickerIndex == 2,
               onPressed: () {
                 setState(() {
                   colorPickerIndex = 2;
                 });
               },
-              style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.all<Color>(
-                    colorPickerIndex == 2
-                        ? Colors.blue.withOpacity(.25)
-                        : Colors.white),
-              ),
-              child: const Text("Regression Line"),
+              sampleDisplay: RegressionColorSample(
+                  regressionLineColor: regressionLineColor),
+              resetFunction: () {
+                setState(() {
+                  regressionLineColor = Colors.blue;
+                });
+              },
             ),
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: regressionLineColor,
-              ),
-            ),
-            IconButton(
-                onPressed: () {
-                  setState(() {
-                    regressionLineColor = Colors.blue;
-                  });
-                },
-                icon: Transform.flip(
-                    flipX: true, child: const Icon(Icons.refresh))),
           ],
         ),
+        Switch(
+            value: isTExpression,
+            onChanged: (bool value) {
+              setState(() {
+                isTExpression = !isTExpression;
+              });
+            },
+            thumbIcon: WidgetStateProperty.resolveWith<Icon>(
+                (Set<WidgetState> states) {
+              if (states.contains(WidgetState.selected)) {
+                return Icon(MdiIcons.alphaT);
+              }
+              return Icon(MdiIcons.alphaX);
+            })),
         Expanded(
           child: ColorPicker(
             borderColor: Colors.black,
@@ -856,11 +793,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 });
               }
             },
-            color: colorPickerIndex == 0
-                ? scatterBorderColor
-                : colorPickerIndex == 1
-                    ? scatterFillColor
-                    : regressionLineColor,
+            color: Colors.transparent,
             pickersEnabled: const <ColorPickerType, bool>{
               ColorPickerType.accent: false,
             },
@@ -870,7 +803,6 @@ class _MyHomePageState extends State<MyHomePage> {
     );
   }
 
-  // TODO Fix chart saving, currently only saves the grid without labels
   void saveChart() {
     screenshotController.capture().then((Uint8List? image) async {
       final blob = html.Blob([image], 'image/png');
@@ -888,9 +820,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void generateData() {
     if (typedExpression == null) {
-      throw Exception("Expression is null");
+      return;
     }
     if (typedExpression!.isEmpty) {
+      _snackBar("Expression is empty");
       throw Exception("Expression is empty");
     }
     if (lowerDomain >= upperDomain) {
@@ -901,13 +834,31 @@ class _MyHomePageState extends State<MyHomePage> {
         throw Exception("Range is invalid");
       }
     }
+    if (lowerXAxis != null && upperXAxis != null) {
+      if (lowerXAxis! >= upperXAxis!) {
+        _snackBar("X axis is invalid");
+        throw Exception("X axis is invalid");
+      }
+    }
+    String texExpression;
+    try {
+      texExpression = '${TeXParser(typedExpression!).parse()}';
+    } catch (e) {
+      // snackbar
+      _snackBar("Invalid expression");
+      throw Exception("Invalid expression");
+    }
+    Expression functionExpression;
+    try {
+      functionExpression = Parser().parse(texExpression);
+    } catch (e) {
+      throw Exception("Invalid expression");
+    }
+    Variable expressionVariable = Variable('X');
+    ContextModel contextModel = ContextModel();
+    contextModel.bindVariable(expressionVariable, functionExpression);
+
     setState(() {
-      typedExpression = '${TeXParser(typedExpression!).parse()}';
-      Expression functionExpression = Parser().parse(typedExpression!);
-      print(functionExpression);
-      ContextModel contextModel = ContextModel();
-      Variable expressionVariable = Variable(isTExpression ? 'T' : 'X');
-      contextModel.bindVariable(expressionVariable, functionExpression);
       // set x values based on domain and number of points
       xValues = List.generate(
           numPoints,
@@ -922,14 +873,16 @@ class _MyHomePageState extends State<MyHomePage> {
       }).toList();
     });
 
-    _makeDataNoisy();
+    _makeNoisyData();
     _filterNoisyData();
   }
 
-  _makeDataNoisy() {
+  _makeNoisyData() {
     final Random random = Random();
     double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
-
+    if (yRange == 0) {
+      yRange = yValues.reduce(math.max);
+    }
     setState(() {
       yValuesNoisy = yValues.map((y) {
         int sign = random.nextBool() ? 1 : -1;
@@ -949,20 +902,21 @@ class _MyHomePageState extends State<MyHomePage> {
       return;
     }
 
-    Set<int> removalIndices = {};
-
     for (int i = 0; i < yValuesNoisy.length; i++) {
-      if ((lowerRange != null && yValuesNoisy[i] < lowerRange!) ||
-          (upperRange != null && yValuesNoisy[i] > upperRange!) ||
-          (lowerXAxis != null && xValues[i] < lowerXAxis!) ||
-          (upperXAxis != null && xValues[i] > upperXAxis!) ||
-          (lowerYAxis != null && yValuesNoisy[i] < lowerYAxis!) ||
-          (upperYAxis != null && yValuesNoisy[i] > upperYAxis!)) {
-        removalIndices.add(i);
-      } else {
-        newXValues.add(xValues[i]);
-        newYValuesNoisy.add(yValuesNoisy[i]);
+      if (lowerXAxis != null && xValues[i] < lowerXAxis!) {
+        continue;
       }
+      if (upperXAxis != null && xValues[i] > upperXAxis!) {
+        continue;
+      }
+      if (lowerYAxis != null && yValuesNoisy[i] < lowerYAxis!) {
+        continue;
+      }
+      if (upperYAxis != null && yValuesNoisy[i] > upperYAxis!) {
+        continue;
+      }
+      newXValues.add(xValues[i]);
+      newYValuesNoisy.add(yValuesNoisy[i]);
     }
 
     setState(() {
@@ -977,15 +931,20 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     List<ScatterSpot> result = [];
     for (int i = 0; i < yValuesNoisyFiltered.length; i++) {
-      result.add(ScatterSpot(xValues[i], yValuesNoisyFiltered[i],
+      result.add(ScatterSpot(xValuesFiltered[i], yValuesNoisyFiltered[i],
           radius: 8, color: scatterBorderColor));
     }
     if (scatterBorderColor != scatterFillColor) {
       for (int i = 0; i < yValuesNoisyFiltered.length; i++) {
-        result.add(ScatterSpot(xValues[i], yValuesNoisyFiltered[i],
+        result.add(ScatterSpot(xValuesFiltered[i], yValuesNoisyFiltered[i],
             radius: 3, color: scatterFillColor));
       }
     }
     return result;
+  }
+
+  void _snackBar(String message) {
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 }
