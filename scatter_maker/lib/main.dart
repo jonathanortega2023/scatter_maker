@@ -117,21 +117,6 @@ class _MyHomePageState extends State<MyHomePage> {
         radius: 8, color: Colors.accents[index % Colors.accents.length]);
   });
 
-  static const adSource = '''
-<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3606561568928972"
-     crossorigin="anonymous"></script>
-<!-- scatter-maker-ad -->
-<ins class="adsbygoogle"
-     style="display:block"
-     data-ad-client="ca-pub-3606561568928972"
-     data-ad-slot="5109743210"
-     data-ad-format="auto"
-     data-full-width-responsive="true"></ins>
-<script>
-     (adsbygoogle = window.adsbygoogle || []).push({});
-</script>
-''';
-
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -211,20 +196,20 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                   // TODO Ad
-                  Container(
-                    decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 1)),
-                    height: 200,
-                    width: 600,
-                    child: const DisplayWebAd(),
-                  ),
-                  Container(
-                    decoration: BoxDecoration(
-                        border: Border.all(color: Colors.black, width: 1)),
-                    height: 200,
-                    width: 600,
-                    child: const FeedWebAd(),
-                  )
+                  // Container(
+                  //   decoration: BoxDecoration(
+                  //       border: Border.all(color: Colors.black, width: 1)),
+                  //   height: 200,
+                  //   width: 600,
+                  //   child: const DisplayWebAd(),
+                  // ),
+                  // Container(
+                  //   decoration: BoxDecoration(
+                  //       border: Border.all(color: Colors.black, width: 1)),
+                  //   height: 200,
+                  //   width: 600,
+                  //   child: const FeedWebAd(),
+                  // )
                 ],
               ),
             ),
