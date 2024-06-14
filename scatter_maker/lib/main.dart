@@ -44,21 +44,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
-      // home: const MyHomePage(title: 'Scatter Maker Home Page'),
-      home: Scaffold(
-        backgroundColor: Colors.white,
-        appBar: AppBar(
-          title: Text('Scatter Maker Home Page'),
-        ),
-        body: Center(
-          child: Column(
-            children: [
-              DisplayWebAd(),
-              FeedWebAd(),
-            ],
-          ),
-        ),
-      ),
+      home: const MyHomePage(title: 'Scatter Maker Home Page'),
     );
   }
 }

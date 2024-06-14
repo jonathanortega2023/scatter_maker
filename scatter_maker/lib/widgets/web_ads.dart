@@ -56,9 +56,9 @@ class WebAd extends StatelessWidget {
       decoration: BoxDecoration(
         border: Border.all(color: Colors.black),
       ),
-      width: 1000,
-      height: 300,
-      child: HtmlElementView(viewType: viewType),
+      width: 300,
+      height: 100,
+      child: Stack(children: [HtmlElementView(viewType: viewType), Text('Ad'),]),
     );
   }
 }
