@@ -8,7 +8,7 @@ import "package:math_expressions/math_expressions.dart";
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:scatter_maker/widgets/web_ad.dart';
+import 'package:scatter_maker/widgets/web_ads.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'dart:html' as html;
 import 'dart:math' as math;
@@ -44,7 +44,21 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Scatter Maker Home Page'),
+      // home: const MyHomePage(title: 'Scatter Maker Home Page'),
+      home: Scaffold(
+        backgroundColor: Colors.white,
+        appBar: AppBar(
+          title: Text('Scatter Maker Home Page'),
+        ),
+        body: Center(
+          child: Column(
+            children: [
+              DisplayWebAd(),
+              FeedWebAd(),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
