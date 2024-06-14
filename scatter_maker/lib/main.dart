@@ -1,17 +1,10 @@
 // ignore_for_file: sort_child_properties_last
 
-import 'dart:html';
 import 'dart:math';
-import 'dart:ui' as ui;
-import 'dart:io' as io;
 import 'package:flutter/material.dart';
-import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import 'package:flutter/widgets.dart';
 import 'package:math_keyboard/math_keyboard.dart';
 import "package:math_expressions/math_expressions.dart";
-import "package:simple_icons/simple_icons.dart";
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -42,7 +35,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Scatter Maker',
       theme: ThemeData(
         sliderTheme: const SliderThemeData(
           showValueIndicator: ShowValueIndicator.always,
@@ -50,12 +43,11 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueGrey),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'Scatter Maker Home Page'),
     );
   }
 }
 
-const SizedBox _kSizedBoxW5 = SizedBox(width: 5);
 const SizedBox _kSizedBoxW20 = SizedBox(width: 20);
 const SizedBox _kSizedBoxW40 = SizedBox(width: 40);
 
@@ -94,7 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
   double? upperYAxis;
   double? yAxisInterval;
 
-  int numPoints = 100;
+  int numPoints = 200;
 
   String? xLabel;
   String? yLabel;
@@ -110,7 +102,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   double randomnessStrength = 0;
 
-  double chartAspectRatio = 1.8;
+  double chartAspectRatio = 2.2;
   List<double> xValues = [];
   List<double> yValues = [];
   List<double> yValuesNoisy = [];
@@ -118,7 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
   List<double> yValuesNoisyFiltered = [];
 
   List<ScatterSpot> fakeScatterPoints = List.generate(51, (index) {
-    return ScatterSpot(index.toDouble(), index.toDouble(),
+    return ScatterSpot(index.toDouble() / 5, index.toDouble() / 5,
         radius: 8, color: Colors.accents[index % Colors.accents.length]);
   });
 
@@ -176,8 +168,16 @@ class _MyHomePageState extends State<MyHomePage> {
             Expanded(
               flex: 2,
               child: Column(children: [
+                Stack(children: [
+                  Transform.translate(
+                      offset: const Offset(20, -20),
+                      child: const Text(
+                        "Noise Strength",
+                        style: TextStyle(fontSize: 16),
+                      )),
+                  randomnessSlider(),
+                ]),
                 regressionOptions(),
-                randomnessSlider(),
                 const Divider(
                   color: Colors.black,
                 ),
@@ -195,21 +195,32 @@ class _MyHomePageState extends State<MyHomePage> {
               flex: 4,
               child: Column(
                 children: [
-                  const Text("Chart Aspect Ratio",
-                      style: TextStyle(fontSize: 20)),
-                  SfSlider(
-                    value: chartAspectRatio,
-                    onChanged: (value) {
-                      setState(() {
-                        chartAspectRatio = value;
-                      });
-                    },
-                    min: 0.6,
-                    max: 2.2,
-                    interval: 0.2,
-                    stepSize: 0.2,
-                    showTicks: true,
-                    showLabels: true,
+                  Stack(
+                    children: [
+                      Transform.translate(
+                          offset: const Offset(10, -5),
+                          child: const Text(
+                            "Chart Aspect Ratio",
+                            style: TextStyle(fontSize: 16),
+                          )),
+                      SizedBox(
+                        width: 1000,
+                        child: SfSlider(
+                          value: chartAspectRatio,
+                          onChanged: (value) {
+                            setState(() {
+                              chartAspectRatio = value;
+                            });
+                          },
+                          min: 0.6,
+                          max: 2.2,
+                          interval: 0.2,
+                          stepSize: 0.2,
+                          showTicks: true,
+                          showLabels: true,
+                        ),
+                      ),
+                    ],
                   ),
                   const Divider(color: Colors.transparent),
                   scatterChartGraph(),
@@ -315,9 +326,7 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget regressionOptions() {
     return Column(
       children: [
-        Text(
-            "Regression equation: ${regressionEquationString ?? "Calculated upon generation"}"),
-        Text("R^2: ${rSquared ?? "Calculated upon generation"}"),
+        const Divider(),
         CheckboxListTile(
             title: const Text("Polynomial Regression"),
             value: selectedRegressionOption == 0,
@@ -366,9 +375,13 @@ class _MyHomePageState extends State<MyHomePage> {
             ],
           ),
         CheckboxListTile(
-            title: const Text("Exponential Regression"),
+            title: const Text(
+                "👷🏾‍♂️ Exponential Regression - 🚧 Under Construction 🚧"),
             value: selectedRegressionOption == 1,
+            enabled: false,
+            // TODO Implement
             onChanged: (value) {
+              return;
               if (value == null) {
                 return;
               }
@@ -396,6 +409,10 @@ class _MyHomePageState extends State<MyHomePage> {
             });
           },
         ),
+        const Divider(),
+        Text(
+            "Regression equation: ${regressionEquationString ?? "Calculated upon generation"}"),
+        Text("R^2: ${rSquared ?? "Calculated upon generation"}"),
       ],
     );
   }
@@ -913,26 +930,28 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     for (int i = 0; i < yValuesNoisy.length; i++) {
-      if (xValues[i] < lowerXAxis) {
+      var xValue = xValues[i];
+      var yValue = yValuesNoisy[i];
+      if (xValue < lowerXAxis) {
         continue;
       }
-      if (xValues[i] > upperXAxis) {
+      if (xValue > upperXAxis) {
         continue;
       }
-      if (lowerYAxis != null && yValuesNoisy[i] < lowerYAxis!) {
+      if (lowerYAxis != null && yValue < lowerYAxis!) {
         continue;
       }
-      if (upperYAxis != null && yValuesNoisy[i] > upperYAxis!) {
+      if (upperYAxis != null && yValue > upperYAxis!) {
         continue;
       }
-      if (lowerDomain != null && xValues[i] < lowerDomain!) {
+      if (lowerDomain != null && xValue < lowerDomain!) {
         continue;
       }
-      if (upperDomain != null && xValues[i] > upperDomain!) {
+      if (upperDomain != null && xValue > upperDomain!) {
         continue;
       }
-      newXValues.add(xValues[i]);
-      newYValuesNoisy.add(yValuesNoisy[i]);
+      newXValues.add(xValue);
+      newYValuesNoisy.add(yValue);
     }
 
     setState(() {
@@ -983,46 +1002,72 @@ class _MyHomePageState extends State<MyHomePage> {
       setState(() {
         regressionEquationFunction = result.function;
       });
-      _calculateR2();
+      _calculateRSquared();
 
       // Format the regression equation
       String stringResult = result.polynomial.format(
         variable: isTExpression ? 'T' : 'X',
       );
-      String formattedResult = _formatEquationString(stringResult);
+      String formattedResult = _formatPolyEquationString(stringResult);
 
       setState(() {
         regressionEquationString = formattedResult;
       });
     } else if (selectedRegressionOption == 1) {
-      // Exponential Regression: y = a * e^(bx)
+      // Transform y values by taking the natural logarithm
+      List<double> logYValues =
+          yValuesNoisyFiltered.map((y) => log(y)).toList();
+
+      // Perform linear regression on transformed data
+      final fitter = PolynomialRegression(degree: 1);
+      final result =
+          fitter.fit(xs: xValuesFiltered.toVector(), ys: logYValues.toVector());
+      print(result.polynomial.format());
       return;
+      // TODO: Fix this, probably will only work for positive values and be a headache
+      // Extract the coefficients
+      // final double b = result.coefficients[1];
+      // final double lnA = result.coefficients[0];
+      // final double a = exp(lnA);
+
+      // // Calculate R-squared
+      // setState(() {
+      //   regressionEquationFunction = (x) => a * exp(b * x);
+      // });
+      // _calculateRSquared();
+
+      // // Format the regression equation
+      // String formattedResult =
+      //     'y = ${a.toStringAsFixed(2)} * e^(${b.toStringAsFixed(2)}x)';
+      // setState(() {
+      //   regressionEquationString = formattedResult;
+      // });
     }
   }
 
-  String _formatEquationString(String equation) {
+  String _formatPolyEquationString(String equation) {
     String formattedResult = "";
     var terms = equation.split(" + ");
     for (var term in terms) {
       double coefficient;
       if (!term.contains("X") && !term.contains("T")) {
         coefficient = double.parse(term);
-        if (coefficient.abs() <= 0.001) continue;
+        if (coefficient.abs() <= 0.01) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
         formattedResult += coefficient.abs().toStringAsFixed(2);
         continue;
       } else if (term.contains("X")) {
         coefficient = double.parse(term.split("X")[0]);
-        if (coefficient.abs() <= 0.001) continue;
+        if (coefficient.abs() <= 0.01) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
         formattedResult += coefficient.abs().toStringAsFixed(2);
-        formattedResult += "X" + term.split("X")[1];
+        formattedResult += "X${term.split("X")[1]}";
       } else if (term.contains("T")) {
         coefficient = double.parse(term.split("T")[0]);
-        if (coefficient.abs() <= 0.001) continue;
+        if (coefficient.abs() <= 0.01) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
         formattedResult += coefficient.abs().toStringAsFixed(2);
-        formattedResult += "T" + term.split("T")[1];
+        formattedResult += "T${term.split("T")[1]}";
       }
     }
     if (formattedResult.startsWith(" + ")) {
@@ -1031,7 +1076,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return formattedResult;
   }
 
-  void _calculateR2() {
+  void _calculateRSquared() {
     // Calculate the mean of y
     final int n = yValuesNoisyFiltered.length;
     final double meanY = yValuesNoisyFiltered.reduce((a, b) => a + b) / n;
@@ -1053,6 +1098,9 @@ class _MyHomePageState extends State<MyHomePage> {
 
     // Update the state
     setState(() {
+      if (r2.isNaN || r2 < .0001) {
+        rSquared = 0.0;
+      }
       rSquared = r2.toPrecision(4);
     });
   }
