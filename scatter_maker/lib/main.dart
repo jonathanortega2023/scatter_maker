@@ -8,6 +8,7 @@ import "package:math_expressions/math_expressions.dart";
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:scatter_maker/widgets/web_ad.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
 import 'dart:html' as html;
 import 'dart:math' as math;
@@ -50,6 +51,8 @@ class MyApp extends StatelessWidget {
 
 const SizedBox _kSizedBoxW20 = SizedBox(width: 20);
 const SizedBox _kSizedBoxW40 = SizedBox(width: 40);
+const SizedBox _kSizedBoxH20 = SizedBox(height: 20);
+const SizedBox _kSizedBoxH40 = SizedBox(height: 40);
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key, required this.title});
@@ -114,6 +117,21 @@ class _MyHomePageState extends State<MyHomePage> {
         radius: 8, color: Colors.accents[index % Colors.accents.length]);
   });
 
+  static const adSource = '''
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-3606561568928972"
+     crossorigin="anonymous"></script>
+<!-- scatter-maker-ad -->
+<ins class="adsbygoogle"
+     style="display:block"
+     data-ad-client="ca-pub-3606561568928972"
+     data-ad-slot="5109743210"
+     data-ad-format="auto"
+     data-full-width-responsive="true"></ins>
+<script>
+     (adsbygoogle = window.adsbygoogle || []).push({});
+</script>
+''';
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -165,33 +183,52 @@ class _MyHomePageState extends State<MyHomePage> {
           threeColorPicker(),
           const Divider(),
           Row(children: [
-            Expanded(
+            Flexible(
               flex: 2,
-              child: Column(children: [
-                Stack(children: [
-                  Transform.translate(
-                      offset: const Offset(20, -20),
-                      child: const Text(
-                        "Noise Strength",
-                        style: TextStyle(fontSize: 16),
-                      )),
-                  randomnessSlider(),
-                ]),
-                regressionOptions(),
-                const Divider(
-                  color: Colors.black,
-                ),
-                ButtonBar(
-                  alignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    const PaypalDonateButton(),
-                    saveChartButton(),
-                  ],
-                ),
-              ]),
+              child: Column(
+                children: [
+                  _kSizedBoxH20,
+                  Stack(
+                    children: [
+                      Transform.translate(
+                          offset: const Offset(15, -20),
+                          child: const Text(
+                            "Noise Strength",
+                            style: TextStyle(fontSize: 16),
+                          )),
+                      randomnessSlider(),
+                    ],
+                  ),
+                  regressionOptions(),
+                  const Divider(
+                    color: Colors.black,
+                  ),
+                  ButtonBar(
+                    alignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const PaypalDonateButton(),
+                      saveChartButton(),
+                    ],
+                  ),
+                  // TODO Ad
+                  Container(
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black, width: 1)),
+                    height: 200,
+                    width: 600,
+                    child: const DisplayWebAd(),
+                  ),
+                  Container(
+                    decoration: BoxDecoration(
+                        border: Border.all(color: Colors.black, width: 1)),
+                    height: 200,
+                    width: 600,
+                    child: const FeedWebAd(),
+                  )
+                ],
+              ),
             ),
-            const VerticalDivider(),
-            Expanded(
+            Flexible(
               flex: 4,
               child: Column(
                 children: [
@@ -236,20 +273,22 @@ class _MyHomePageState extends State<MyHomePage> {
   randomnessSlider() {
     return AbsorbPointer(
       absorbing: yValues.isEmpty,
-      child: Slider(
-        value: randomnessStrength * 10,
+      child: SfSlider(
+        value: randomnessStrength / 10,
         onChanged: (value) {
           setState(() {
-            randomnessStrength = value / 10;
+            randomnessStrength = value * 10;
           });
           _makeNoisyData();
           _filterNoisyData();
           _getRegressionEquation();
         },
         min: 0,
-        max: 100,
-        divisions: 20,
-        label: randomnessStrength.toStringAsFixed(2),
+        max: 1,
+        interval: 0.1,
+        stepSize: 0.1,
+        showTicks: true,
+        showLabels: true,
       ),
     );
   }
@@ -268,7 +307,7 @@ class _MyHomePageState extends State<MyHomePage> {
     return Screenshot(
       controller: screenshotController,
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 800),
+        constraints: const BoxConstraints(maxHeight: 1000),
         color: Colors.white,
         child: AspectRatio(
           aspectRatio: chartAspectRatio,
@@ -296,8 +335,11 @@ class _MyHomePageState extends State<MyHomePage> {
                         showTitles: true,
                         reservedSize: 50,
                         interval: yAxisInterval),
-                    axisNameWidget: Text(yLabel ?? "Y",
-                        style: const TextStyle(fontSize: 20)),
+                    axisNameWidget: Text(
+                      yLabel ?? "Y",
+                      style: const TextStyle(
+                          fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
                     axisNameSize: 30),
                 bottomTitles: AxisTitles(
                     sideTitles: SideTitles(
@@ -305,7 +347,8 @@ class _MyHomePageState extends State<MyHomePage> {
                         reservedSize: 50,
                         interval: xAxisInterval),
                     axisNameWidget: Text(xLabel ?? "X",
-                        style: const TextStyle(fontSize: 20)),
+                        style: const TextStyle(
+                            fontSize: 20, fontWeight: FontWeight.bold)),
                     axisNameSize: 30),
                 // Adds empty widget for whitespace
                 rightTitles: AxisTitles(
@@ -1079,8 +1122,7 @@ class _MyHomePageState extends State<MyHomePage> {
   void _calculateRSquared() {
     // Calculate the mean of y
     final int n = yValuesNoisyFiltered.length;
-    final double meanY = yValuesNoisyFiltered.reduce((a, b) => a + b) / n;
-
+    final double meanY = yValuesNoisyFiltered.arithmeticMean();
     // Calculate the total sum of squares (SST)
     final double sst = yValuesNoisyFiltered.fold(
         0, (prev, yi) => prev + (yi - meanY) * (yi - meanY));
