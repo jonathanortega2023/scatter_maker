@@ -26,6 +26,8 @@ final intervalFormatters = [
   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
 ];
 
+enum RegressionChartLocation { topLeft, topRight, bottomLeft, bottomRight }
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   runApp(const MyApp());
@@ -97,8 +99,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int? selectedRegressionOption;
   int polynomialDegree = 2;
+  bool plotRegressionEquation = true;
   bool showRegressionEquation = true;
   bool showRSquared = true;
+  RegressionChartLocation regressionChartLocation = RegressionChartLocation.topLeft;
   double? rSquared;
   String? regressionEquationString;
   UnaryFunction<double>? regressionEquationFunction;
@@ -185,6 +189,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     ],
                   ),
                   regressionOptions(),
+
                   const Divider(
                     color: Colors.black,
                   ),
@@ -289,6 +294,13 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget scatterChartGraph() {
+    String _regressionText = "xsaxas\nxasbjhxbj";
+    if (showRegressionEquation) {
+      _regressionText = regressionEquationString ?? "";
+    }
+    if (showRSquared) {
+      _regressionText += "\nR^2: ${rSquared ?? ""}";
+    }
     return Screenshot(
       controller: screenshotController,
       child: Container(
@@ -296,55 +308,100 @@ class _MyHomePageState extends State<MyHomePage> {
         color: Colors.white,
         child: AspectRatio(
           aspectRatio: chartAspectRatio,
-          child: ScatterChart(
-            ScatterChartData(
-              minX: lowerXAxis,
-              maxX: upperXAxis,
-              minY: lowerYAxis,
-              maxY: upperYAxis,
-              scatterSpots: _getScatterSpots(),
-              scatterTouchData: ScatterTouchData(enabled: false),
-              showingTooltipIndicators: null,
-              scatterLabelSettings: ScatterLabelSettings(showLabel: false),
-              backgroundColor: Colors.white,
-              titlesData: FlTitlesData(
-                show: true,
-                topTitles: AxisTitles(
-                    axisNameWidget: Text(chartTitle ?? "Title",
-                        style: const TextStyle(
-                          fontSize: 30,
-                        )),
-                    axisNameSize: 60),
-                leftTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        interval: yAxisInterval),
-                    axisNameWidget: Text(
-                      yLabel ?? "Y",
-                      style: const TextStyle(
-                          fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    axisNameSize: 30),
-                bottomTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 50,
-                        interval: xAxisInterval),
-                    axisNameWidget: Text(xLabel ?? "X",
-                        style: const TextStyle(
-                            fontSize: 20, fontWeight: FontWeight.bold)),
-                    axisNameSize: 30),
-                // Adds empty widget for whitespace
-                rightTitles: AxisTitles(
-                    sideTitles: SideTitles(
-                        showTitles: true,
-                        reservedSize: 20,
-                        getTitlesWidget: (numValue, titleValue) {
-                          return const SizedBox.shrink();
-                        })),
+          child: Stack(
+            children: [
+              ScatterChart(
+                ScatterChartData(
+                  minX: lowerXAxis,
+                  maxX: upperXAxis,
+                  minY: lowerYAxis,
+                  maxY: upperYAxis,
+                  scatterSpots: _getScatterSpots() + _regressionLine(),
+                  scatterTouchData: ScatterTouchData(enabled: false),
+                  showingTooltipIndicators: null,
+                  scatterLabelSettings: ScatterLabelSettings(showLabel: false),
+                  backgroundColor: Colors.white,
+                  titlesData: FlTitlesData(
+                    show: true,
+                    topTitles: AxisTitles(
+                        axisNameWidget: Text(chartTitle ?? "Title",
+                            style: const TextStyle(
+                              fontSize: 30,
+                            )),
+                        axisNameSize: 60),
+                    leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            interval: yAxisInterval),
+                        axisNameWidget: Text(
+                          yLabel ?? "Y",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        axisNameSize: 30),
+                    bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            interval: xAxisInterval),
+                        axisNameWidget: Text(xLabel ?? "X",
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
+                        axisNameSize: 30),
+                    // Adds empty widget for whitespace
+                    rightTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 20,
+                            getTitlesWidget: (numValue, titleValue) {
+                              return const SizedBox.shrink();
+                            })),
+                  ),
+                ),
               ),
-            ),
+              Transform.translate(
+                offset: const Offset(200, 50),
+                child: Text(
+                  _regressionText,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Transform.translate(
+                offset: const Offset(1000, 50),
+                child: Text(
+                  _regressionText,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Transform.translate(
+                // calculate offset based on aspect ratio
+                offset: Offset(200, 400),
+                child: Text(
+                  _regressionText,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+              Transform.translate(
+                offset: const Offset(1000, 400),
+                child: Text(
+                  _regressionText,
+                  style: const TextStyle(
+                    fontSize: 20,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
@@ -420,7 +477,16 @@ class _MyHomePageState extends State<MyHomePage> {
             }),
         const Divider(),
         CheckboxListTile(
-          title: const Text('Show Equation on Graph'),
+          title: const Text('Plot equation'),
+          value: plotRegressionEquation,
+          onChanged: (value) {
+            setState(() {
+              plotRegressionEquation = value ?? false;
+            });
+          },
+        ),
+        CheckboxListTile(
+          title: const Text('Show equation on graph'),
           value: showRegressionEquation,
           onChanged: (value) {
             setState(() {
@@ -429,7 +495,7 @@ class _MyHomePageState extends State<MyHomePage> {
           },
         ),
         CheckboxListTile(
-          title: const Text('Show R^2 on Graph'),
+          title: const Text('Show R^2 on graph'),
           value: showRSquared,
           onChanged: (value) {
             setState(() {
@@ -437,6 +503,37 @@ class _MyHomePageState extends State<MyHomePage> {
             });
           },
         ),
+        
+        if (showRegressionEquation || showRSquared)
+          ListTile(
+            title: const Text("Regression equation placement:"),
+            trailing: Container(
+              height: 50,
+              width: 50,
+              child: GridView.count(
+                scrollDirection: Axis.horizontal,
+                              crossAxisCount: 2,
+                              children: List.generate(4, (index) {
+                                return GestureDetector(
+                                  onTap: () {
+                                    setState(() {
+                                      regressionChartLocation = RegressionChartLocation.values[index];
+                                    });
+                                    _snackBar("Regression equation location set to ${RegressionChartLocation.values[index]}");
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(1.0),
+                                    child: Container(
+                                      color: regressionChartLocation ==
+                                            RegressionChartLocation.values[index]
+                                        ? Colors.black
+                                        : Colors.grey
+                                    ),
+                                  )
+                                );
+                              }))
+            ),
+          ),
         const Divider(),
         Text(
             "Regression equation: ${regressionEquationString ?? "Calculated upon generation"}"),
@@ -587,7 +684,7 @@ class _MyHomePageState extends State<MyHomePage> {
           border: OutlineInputBorder(),
           hintText: 'Y axis min',
           labelText: 'Y axis min'),
-      inputFormatters: intervalFormatters,
+      inputFormatters: domainFormatters,
     );
   }
 
@@ -818,6 +915,17 @@ class _MyHomePageState extends State<MyHomePage> {
               setState(() {
                 isTExpression = !isTExpression;
               });
+              if (regressionEquationString != null) {
+                setState(() {
+                  if (isTExpression) {
+                    regressionEquationString =
+                        regressionEquationString!.replaceAll("X", "T");
+                  } else {
+                    regressionEquationString =
+                        regressionEquationString!.replaceAll("T", "X");
+                  }
+                });
+              }
             },
             thumbIcon: WidgetStateProperty.resolveWith<Icon>(
                 (Set<WidgetState> states) {
@@ -1101,7 +1209,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (formattedResult.startsWith(" + ")) {
       formattedResult = formattedResult.substring(3);
     }
-    return formattedResult;
+    return "Y = " + formattedResult;
   }
 
   void _calculateRSquared() {
@@ -1130,6 +1238,36 @@ class _MyHomePageState extends State<MyHomePage> {
       }
       rSquared = r2.toPrecision(4);
     });
+  }
+
+  List<ScatterSpot> _regressionLine() {
+    if (!plotRegressionEquation) {
+      return [];
+    }
+    if (regressionEquationFunction == null ||
+        regressionEquationString == null) {
+      return [];
+    }
+    if (xValuesFiltered.isEmpty) {
+      return [];
+    }
+    List<ScatterSpot> result = [];
+    for (int i = 0; i < 500; i++) {
+      double x = xValuesFiltered.first +
+          (xValuesFiltered.last - xValuesFiltered.first) * i / 500;
+      double y = regressionEquationFunction!(x);
+      if (y.isNaN) {
+        continue;
+      }
+      if (lowerYAxis != null && y < lowerYAxis!) {
+        continue;
+      }
+      if (upperYAxis != null && y > upperYAxis!) {
+        continue;
+      }
+      result.add(ScatterSpot(x, y, radius: 2, color: regressionLineColor));
+    }
+    return result;
   }
 }
 
