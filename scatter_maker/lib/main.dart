@@ -26,7 +26,42 @@ final intervalFormatters = [
   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
 ];
 
-enum RegressionChartLocation { topLeft, topRight, bottomLeft, bottomRight }
+enum RegressionLocation {
+  topLeft,
+  centerLeft,
+  bottomLeft,
+  topCenter,
+  center,
+  bottomCenter,
+  topRight,
+  centerRight,
+  bottomRight,
+}
+
+Offset getRegressionOffset(RegressionLocation location, Size size) {
+  final widthStep = size.width / 9;
+  final heightStep = size.height / 9;
+  switch (location) {
+    case RegressionLocation.topLeft:
+      return Offset(widthStep, heightStep * 2);
+    case RegressionLocation.topCenter:
+      return Offset(widthStep * 4, heightStep * 2);
+    case RegressionLocation.topRight:
+      return Offset(widthStep * 7, heightStep * 2);
+    case RegressionLocation.centerLeft:
+      return Offset(widthStep, heightStep * 4);
+    case RegressionLocation.center:
+      return Offset(widthStep * 4, heightStep * 4);
+    case RegressionLocation.centerRight:
+      return Offset(widthStep * 7, heightStep * 4);
+    case RegressionLocation.bottomLeft:
+      return Offset(widthStep, heightStep * 6);
+    case RegressionLocation.bottomCenter:
+      return Offset(widthStep * 4, heightStep * 6);
+    case RegressionLocation.bottomRight:
+      return Offset(widthStep * 7, heightStep * 6);
+  }
+}
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +102,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final _scaffoldKey = GlobalKey<ScaffoldState>();
+  final _chartKey = GlobalKey();
   ScreenshotController screenshotController = ScreenshotController();
 
   Color scatterBorderColor = Colors.purple;
@@ -102,8 +138,9 @@ class _MyHomePageState extends State<MyHomePage> {
   bool plotRegressionEquation = true;
   bool showRegressionEquation = true;
   bool showRSquared = true;
-  RegressionChartLocation regressionChartLocation = RegressionChartLocation.topLeft;
+  RegressionLocation regressionLocation = RegressionLocation.topLeft;
   double? rSquared;
+  String? rSquaredString;
   String? regressionEquationString;
   UnaryFunction<double>? regressionEquationFunction;
 
@@ -294,23 +331,24 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Widget scatterChartGraph() {
-    String _regressionText = "xsaxas\nxasbjhxbj";
+    String regressionText = "";
     if (showRegressionEquation) {
-      _regressionText = regressionEquationString ?? "";
+      regressionText = regressionEquationString ?? "";
     }
     if (showRSquared) {
-      _regressionText += "\nR^2: ${rSquared ?? ""}";
+      regressionText += "\n${rSquaredString ?? ""}";
     }
     return Screenshot(
       controller: screenshotController,
       child: Container(
-        constraints: const BoxConstraints(maxHeight: 1000),
+        constraints: const BoxConstraints(maxHeight: 1200),
         color: Colors.white,
         child: AspectRatio(
           aspectRatio: chartAspectRatio,
           child: Stack(
             children: [
               ScatterChart(
+                key: _chartKey,
                 ScatterChartData(
                   minX: lowerXAxis,
                   maxX: upperXAxis,
@@ -360,46 +398,37 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                 ),
               ),
-              Transform.translate(
-                offset: const Offset(200, 50),
-                child: Text(
-                  _regressionText,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              Transform.translate(
-                offset: const Offset(1000, 50),
-                child: Text(
-                  _regressionText,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              Transform.translate(
-                // calculate offset based on aspect ratio
-                offset: Offset(200, 400),
-                child: Text(
-                  _regressionText,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                  ),
-                ),
-              ),
-              Transform.translate(
-                offset: const Offset(1000, 400),
-                child: Text(
-                  _regressionText,
-                  style: const TextStyle(
-                    fontSize: 20,
-                    color: Colors.black,
-                  ),
-                ),
+              // depends on future because the chart size is not known until after the chart is built
+              // TODO Fix for vertical aspect ratios
+              FutureBuilder<Size>(
+                future: Future(() => _chartKey.currentContext!.size!),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox.shrink();
+                  } else if (snapshot.hasError) {
+                    return Text("Error: ${snapshot.error}");
+                  } else {
+                    final chartSize = snapshot.data!;
+                    return Transform.translate(
+                      offset:
+                          getRegressionOffset(regressionLocation, chartSize),
+                      child: Text(
+                        regressionText,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                                color: Colors.white,
+                                offset: Offset(1, 1),
+                                blurRadius: 1)
+                          ],
+                        ),
+                      ),
+                    );
+                  }
+                },
               ),
             ],
           ),
@@ -495,7 +524,7 @@ class _MyHomePageState extends State<MyHomePage> {
           },
         ),
         CheckboxListTile(
-          title: const Text('Show R^2 on graph'),
+          title: const Text('Show R² on graph'),
           value: showRSquared,
           onChanged: (value) {
             setState(() {
@@ -503,41 +532,40 @@ class _MyHomePageState extends State<MyHomePage> {
             });
           },
         ),
-        
         if (showRegressionEquation || showRSquared)
           ListTile(
             title: const Text("Regression equation placement:"),
             trailing: Container(
-              height: 50,
-              width: 50,
-              child: GridView.count(
-                scrollDirection: Axis.horizontal,
-                              crossAxisCount: 2,
-                              children: List.generate(4, (index) {
-                                return GestureDetector(
-                                  onTap: () {
-                                    setState(() {
-                                      regressionChartLocation = RegressionChartLocation.values[index];
-                                    });
-                                    _snackBar("Regression equation location set to ${RegressionChartLocation.values[index]}");
-                                  },
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(1.0),
-                                    child: Container(
-                                      color: regressionChartLocation ==
-                                            RegressionChartLocation.values[index]
-                                        ? Colors.black
-                                        : Colors.grey
-                                    ),
-                                  )
-                                );
-                              }))
-            ),
+                height: 50,
+                width: 50,
+                child: GridView.count(
+                    scrollDirection: Axis.horizontal,
+                    crossAxisCount: 3,
+                    children: List.generate(9, (index) {
+                      return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              regressionLocation =
+                                  RegressionLocation.values[index];
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(1.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  border: Border.all(width: 1),
+                                  color: regressionLocation ==
+                                          RegressionLocation.values[index]
+                                      ? Colors.black
+                                      : Colors.grey[200]),
+                            ),
+                          ));
+                    }))),
           ),
         const Divider(),
-        Text(
-            "Regression equation: ${regressionEquationString ?? "Calculated upon generation"}"),
-        Text("R^2: ${rSquared ?? "Calculated upon generation"}"),
+        Text("Regression equation: ${regressionEquationString ?? ""}",
+            style: const TextStyle(fontSize: 20)),
+        Text("R²: ${rSquared ?? ""}", style: const TextStyle(fontSize: 20)),
       ],
     );
   }
@@ -759,6 +787,7 @@ class _MyHomePageState extends State<MyHomePage> {
         setState(() {
           lowerXAxis = textValue;
         });
+        _filterNoisyData();
       },
       onEditingComplete: () {
         _filterNoisyData();
@@ -987,7 +1016,7 @@ class _MyHomePageState extends State<MyHomePage> {
       _snackBar("Expression is empty");
       throw Exception("Expression is empty");
     }
-    if (lowerXAxis! >= upperXAxis!) {
+    if (lowerXAxis >= upperXAxis) {
       _snackBar("X axis is invalid");
       throw Exception("X axis is invalid");
     }
@@ -1034,8 +1063,15 @@ class _MyHomePageState extends State<MyHomePage> {
         return functionExpression.evaluate(EvaluationType.REAL, contextModel)
             as double;
       }).toList();
+      // remove from xValues and yValues if yValue[i] is NaN or infinite
+      for (int i = 0; i < yValues.length; i++) {
+        if (!yValues[i].isFinite || yValues[i].isNaN) {
+          xValues.removeAt(i);
+          yValues.removeAt(i);
+          i -= 1;
+        }
+      }
     });
-
     _makeNoisyData();
     _filterNoisyData();
   }
@@ -1047,6 +1083,7 @@ class _MyHomePageState extends State<MyHomePage> {
       yRange = yValues.reduce(math.max);
     }
     setState(() {
+      // TODO Fix this, try to constrain the noise to the range of the data
       yValuesNoisy = yValues.map((y) {
         int sign = random.nextBool() ? 1 : -1;
         double noise =
@@ -1086,6 +1123,9 @@ class _MyHomePageState extends State<MyHomePage> {
       if (upperDomain != null && xValue > upperDomain!) {
         continue;
       }
+      if (!yValue.isFinite || yValue.isNaN) {
+        continue;
+      }
       newXValues.add(xValue);
       newYValuesNoisy.add(yValue);
     }
@@ -1102,8 +1142,12 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     List<ScatterSpot> result = [];
     for (int i = 0; i < yValuesNoisyFiltered.length; i++) {
-      result.add(ScatterSpot(xValuesFiltered[i], yValuesNoisyFiltered[i],
-          radius: 8, color: scatterBorderColor));
+      result.add(ScatterSpot(
+        xValuesFiltered[i],
+        yValuesNoisyFiltered[i],
+        radius: 8,
+        color: scatterBorderColor,
+      ));
     }
     if (scatterBorderColor != scatterFillColor) {
       for (int i = 0; i < yValuesNoisyFiltered.length; i++) {
@@ -1209,7 +1253,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (formattedResult.startsWith(" + ")) {
       formattedResult = formattedResult.substring(3);
     }
-    return "Y = " + formattedResult;
+    return "Y = $formattedResult";
   }
 
   void _calculateRSquared() {
@@ -1237,6 +1281,7 @@ class _MyHomePageState extends State<MyHomePage> {
         rSquared = 0.0;
       }
       rSquared = r2.toPrecision(4);
+      rSquaredString = "R² = $rSquared";
     });
   }
 
@@ -1270,5 +1315,3 @@ class _MyHomePageState extends State<MyHomePage> {
     return result;
   }
 }
-
-typedef Printer<T> = String Function(T value);
