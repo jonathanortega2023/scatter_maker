@@ -16,6 +16,7 @@ import 'package:data/data.dart';
 import 'package:screenshot/screenshot.dart';
 import './widgets/buttons/icon_action_buttons.dart';
 import './widgets/buttons/color_action_buttons.dart';
+import './widgets/icons.dart';
 
 final domainFormatters = [
   LengthLimitingTextInputFormatter(7),
@@ -219,7 +220,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       Transform.translate(
                           offset: const Offset(15, -20),
                           child: const Text(
-                            "Noise Strength",
+                            "Noise Level",
                             style: TextStyle(fontSize: 16),
                           )),
                       randomnessSlider(),
@@ -298,11 +299,16 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   randomnessSlider() {
+    // lock the slider if regression selected
     return AbsorbPointer(
       absorbing: yValues.isEmpty,
       child: SfSlider(
         value: randomnessStrength / 10,
         onChanged: (value) {
+          if (selectedRegressionOption != null) {
+            _snackBar("Turn off regression to adjust noise");
+            return;
+          }
           setState(() {
             randomnessStrength = value * 10;
           });
@@ -316,6 +322,9 @@ class _MyHomePageState extends State<MyHomePage> {
         stepSize: 0.1,
         showTicks: true,
         showLabels: true,
+        labelFormatterCallback: (actualValue, formattedText) {
+          return (actualValue * 100).toStringAsFixed(0)+'%';
+        },
       ),
     );
   }
@@ -442,6 +451,7 @@ class _MyHomePageState extends State<MyHomePage> {
       children: [
         const Divider(),
         CheckboxListTile(
+          enabled: yValues.isNotEmpty,
             title: const Text("Polynomial Regression"),
             value: selectedRegressionOption == 0,
             onChanged: (value) {
@@ -454,6 +464,7 @@ class _MyHomePageState extends State<MyHomePage> {
               if (selectedRegressionOption == null) {
                 setState(() {
                   regressionEquationString = null;
+                  rSquaredString = null;
                   rSquared = null;
                 });
               } else {
@@ -466,26 +477,34 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 16.0),
-                child: Text("Polynomial Degree"),
+                child: Text("Degree"),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(0, 0, 8, 8),
-                child: SfSlider(
-                  value: polynomialDegree.toInt(),
-                  onChanged: (value) {
-                    setState(() {
-                      polynomialDegree = value.toInt();
-                    });
-                    _getRegressionEquation();
-                  },
-                  min: 0,
-                  max: 5,
-                  stepSize: 1,
-                  interval: 1,
-                  showTicks: true,
-                  showLabels: true,
+              Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: List.generate(6, (index) {
+                    return Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: ElevatedButton.icon(
+                        icon: PolyDegreeIcon(degree: index),
+                        onPressed: () {
+                          setState(() {
+                            polynomialDegree = index;
+                          });
+                          _getRegressionEquation();
+                        },
+                        style: ButtonStyle(
+                          side: WidgetStateProperty.all(const BorderSide(
+                              color: Colors.black, width: 1)),
+                            backgroundColor: polynomialDegree == index
+                                ? WidgetStateProperty.all(regressionLineColor.withOpacity(0.5))
+                                : WidgetStateProperty.all(Colors.grey[200])),
+                        label: Text(index.toString(), style: const TextStyle(
+                          color: Colors.black,
+                        ))
+                      ),
+                    );
+                  }),
                 ),
-              ),
             ],
           ),
         CheckboxListTile(
@@ -1159,6 +1178,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void _snackBar(String message) {
+    ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text(
       message,
@@ -1174,8 +1194,7 @@ class _MyHomePageState extends State<MyHomePage> {
     }
 
     if (selectedRegressionOption == 0) {
-      final fitter = PolynomialRegression(degree: polynomialDegree);
-      final result = fitter.fit(
+      final result = PolynomialRegression(degree: polynomialDegree).fit(
           xs: xValuesFiltered.toVector(), ys: yValuesNoisyFiltered.toVector());
 
       // Calculate R-squared
@@ -1186,7 +1205,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
       // Format the regression equation
       String stringResult = result.polynomial.format(
-        variable: isTExpression ? 'T' : 'X',
+        variable: 'X',
       );
       String formattedResult = _formatPolyEquationString(stringResult);
 
@@ -1253,7 +1272,7 @@ class _MyHomePageState extends State<MyHomePage> {
     if (formattedResult.startsWith(" + ")) {
       formattedResult = formattedResult.substring(3);
     }
-    return "Y = $formattedResult";
+    return "Ŷ = $formattedResult";
   }
 
   void _calculateRSquared() {
