@@ -224,6 +224,7 @@ class _MyHomePageState extends State<MyHomePage> {
               flex: 2,
               child: Column(
                 children: [
+                  _kSizedBoxH20,
                   Stack(
                     children: [
                       Transform.translate(
@@ -244,7 +245,12 @@ class _MyHomePageState extends State<MyHomePage> {
                   ButtonBar(
                     alignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const PaypalDonateButton(),
+                      Row(
+                        children: [
+                          const PaypalDonateButton(),
+                          // TODO Add about button to new page
+                        ],
+                      ),
                       saveChartButton(),
                     ],
                   ),
@@ -513,41 +519,48 @@ class _MyHomePageState extends State<MyHomePage> {
               _getRegressionEquation();
             }),
         const Divider(),
-        CheckboxListTile(
-            title: const Text('Regression equation w.r.t. T'),
-            value: isTExpression,
-            enabled: selectedRegressionOption != null,
-            onChanged: (value) {
-              setState(() {
-                isTExpression = value ?? false;
-                if (isTExpression) {
-                  regressionEquationString =
-                      regressionEquationString!.replaceAll("X", "T");
-                } else {
-                  regressionEquationString =
-                      regressionEquationString!.replaceAll("T", "X");
-                }
-              });
-            }),
-        CheckboxListTile(
-          title: const Text('Plot regression equation'),
-          value: plotRegressionEquation,
+        ExpansionTile(
           enabled: selectedRegressionOption != null,
-          onChanged: (value) {
-            setState(() {
-              plotRegressionEquation = value ?? false;
-            });
-          },
-        ),
-        CheckboxListTile(
-          title: const Text('Show equation on graph'),
-          value: showRegressionEquation,
-          enabled: selectedRegressionOption != null,
-          onChanged: (value) {
-            setState(() {
-              showRegressionEquation = value ?? false;
-            });
-          },
+          title: Text('Regression Equation Options'),
+          children: [
+            CheckboxListTile(
+                title: const Text('Regression equation w.r.t. T'),
+                value: isTExpression,
+                enabled: selectedRegressionOption != null,
+                onChanged: (value) {
+                  setState(() {
+                    isTExpression = value ?? false;
+                    if (isTExpression) {
+                      regressionEquationString =
+                          regressionEquationString!.replaceAll("X", "T");
+                    } else {
+                      regressionEquationString =
+                          regressionEquationString!.replaceAll("T", "X");
+                    }
+                  });
+                }),
+            CheckboxListTile(
+              title: const Text('Plot regression equation'),
+              value: plotRegressionEquation,
+              enabled: selectedRegressionOption != null,
+              onChanged: (value) {
+                setState(() {
+                  plotRegressionEquation = value ?? false;
+                });
+              },
+            ),
+            CheckboxListTile(
+              title: const Text('Show equation on graph'),
+              value: showRegressionEquation,
+              enabled: selectedRegressionOption != null,
+              onChanged: (value) {
+                setState(() {
+                  showRegressionEquation = value ?? false;
+                });
+              },
+            ),
+            // TODO changeable regression decimal precision
+          ],
         ),
         CheckboxListTile(
           title: const Text('Show R² on graph'),
