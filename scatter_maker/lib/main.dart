@@ -10,6 +10,7 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:scatter_maker/widgets/web_ads.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'dart:html' as html;
 import 'dart:math' as math;
 import 'package:data/data.dart';
@@ -87,6 +88,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+const SizedBox _kSizedBoxW5 = SizedBox(width: 5);
 const SizedBox _kSizedBoxW20 = SizedBox(width: 20);
 const SizedBox _kSizedBoxW40 = SizedBox(width: 40);
 const SizedBox _kSizedBoxH20 = SizedBox(height: 20);
@@ -147,7 +149,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   double randomnessStrength = 0;
 
-  double chartAspectRatio = 2.2;
+  int _aspectRatioMenuValue = 2;
+  double chartAspectRatio = 1.8;
   List<double> xValues = [];
   List<double> yValues = [];
   List<double> yValuesNoisy = [];
@@ -158,6 +161,10 @@ class _MyHomePageState extends State<MyHomePage> {
     return ScatterSpot(index.toDouble() / 5, index.toDouble() / 5,
         radius: 8, color: Colors.accents[index % Colors.accents.length]);
   });
+
+  double dotX = 0.10;
+
+  double dotY = 0.25;
 
   @override
   Widget build(BuildContext context) {
@@ -172,15 +179,18 @@ class _MyHomePageState extends State<MyHomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               const Text("y = ", style: TextStyle(fontSize: 25)),
-              Expanded(child: equationField(), flex: 2),
-              _kSizedBoxW20,
+              Expanded(child: equationField(), flex: 4),
+              _kSizedBoxW40,
               Expanded(child: lowerDomainForm()),
-              _kSizedBoxW40,
+              _kSizedBoxW20,
               Expanded(child: upperDomainForm()),
-              _kSizedBoxW40,
+              _kSizedBoxW20,
               Expanded(child: pointNumberForm()),
+              _kSizedBoxW20,
+              Expanded(child: titleLabelForm(), flex: 4),
               _kSizedBoxW40,
-              Expanded(child: titleLabelForm(), flex: 3),
+              Expanded(child: chartAspectRatioMenu()),
+              _kSizedBoxW20,
             ],
           ),
           const Divider(),
@@ -214,7 +224,6 @@ class _MyHomePageState extends State<MyHomePage> {
               flex: 2,
               child: Column(
                 children: [
-                  _kSizedBoxH20,
                   Stack(
                     children: [
                       Transform.translate(
@@ -226,6 +235,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       randomnessSlider(),
                     ],
                   ),
+                  _kSizedBoxH20,
                   regressionOptions(),
 
                   const Divider(
@@ -257,40 +267,12 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             Flexible(
-              flex: 4,
-              child: Column(
-                children: [
-                  Stack(
-                    children: [
-                      Transform.translate(
-                          offset: const Offset(10, -5),
-                          child: const Text(
-                            "Chart Aspect Ratio",
-                            style: TextStyle(fontSize: 16),
-                          )),
-                      SizedBox(
-                        width: 1000,
-                        child: SfSlider(
-                          value: chartAspectRatio,
-                          onChanged: (value) {
-                            setState(() {
-                              chartAspectRatio = value;
-                            });
-                          },
-                          min: 0.6,
-                          max: 2.2,
-                          interval: 0.2,
-                          stepSize: 0.2,
-                          showTicks: true,
-                          showLabels: true,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Divider(color: Colors.transparent),
-                  scatterChartGraph(),
-                ],
-              ),
+              flex: _aspectRatioMenuValue == 0
+                  ? 2
+                  : _aspectRatioMenuValue == 1
+                      ? 3
+                      : 4,
+              child: Center(child: scatterChartGraph()),
             )
           ])
         ]),
@@ -323,7 +305,7 @@ class _MyHomePageState extends State<MyHomePage> {
         showTicks: true,
         showLabels: true,
         labelFormatterCallback: (actualValue, formattedText) {
-          return (actualValue * 100).toStringAsFixed(0)+'%';
+          return (actualValue * 100).toStringAsFixed(0) + '%';
         },
       ),
     );
@@ -349,97 +331,102 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return Screenshot(
       controller: screenshotController,
-      child: Container(
-        constraints: const BoxConstraints(maxHeight: 1200),
-        color: Colors.white,
-        child: AspectRatio(
-          aspectRatio: chartAspectRatio,
-          child: Stack(
-            children: [
-              ScatterChart(
-                key: _chartKey,
-                ScatterChartData(
-                  minX: lowerXAxis,
-                  maxX: upperXAxis,
-                  minY: lowerYAxis,
-                  maxY: upperYAxis,
-                  scatterSpots: _getScatterSpots() + _regressionLine(),
-                  scatterTouchData: ScatterTouchData(enabled: false),
-                  showingTooltipIndicators: null,
-                  scatterLabelSettings: ScatterLabelSettings(showLabel: false),
-                  backgroundColor: Colors.white,
-                  titlesData: FlTitlesData(
-                    show: true,
-                    topTitles: AxisTitles(
-                        axisNameWidget: Text(chartTitle ?? "Title",
+      child: Animate(
+        child: Container(
+          constraints: const BoxConstraints(maxHeight: 1200),
+          color: Colors.white,
+          child: AspectRatio(
+            aspectRatio: chartAspectRatio,
+            child: Stack(
+              children: [
+                ScatterChart(
+                  key: _chartKey,
+                  ScatterChartData(
+                    minX: lowerXAxis,
+                    maxX: upperXAxis,
+                    minY: lowerYAxis,
+                    maxY: upperYAxis,
+                    scatterSpots: _getScatterSpots() + _regressionLine(),
+                    scatterTouchData: ScatterTouchData(enabled: false),
+                    showingTooltipIndicators: null,
+                    scatterLabelSettings:
+                        ScatterLabelSettings(showLabel: false),
+                    backgroundColor: Colors.white,
+                    titlesData: FlTitlesData(
+                      show: true,
+                      topTitles: AxisTitles(
+                          axisNameWidget: Text(chartTitle ?? "Title",
+                              style: const TextStyle(
+                                fontSize: 30,
+                              )),
+                          axisNameSize: 60),
+                      leftTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 50,
+                              interval: yAxisInterval),
+                          axisNameWidget: Text(
+                            yLabel ?? "Y",
                             style: const TextStyle(
-                              fontSize: 30,
-                            )),
-                        axisNameSize: 60),
-                    leftTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            interval: yAxisInterval),
-                        axisNameWidget: Text(
-                          yLabel ?? "Y",
-                          style: const TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        ),
-                        axisNameSize: 30),
-                    bottomTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 50,
-                            interval: xAxisInterval),
-                        axisNameWidget: Text(xLabel ?? "X",
-                            style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold)),
-                        axisNameSize: 30),
-                    // Adds empty widget for whitespace
-                    rightTitles: AxisTitles(
-                        sideTitles: SideTitles(
-                            showTitles: true,
-                            reservedSize: 20,
-                            getTitlesWidget: (numValue, titleValue) {
-                              return const SizedBox.shrink();
-                            })),
+                                fontSize: 20, fontWeight: FontWeight.bold),
+                          ),
+                          axisNameSize: 30),
+                      bottomTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 50,
+                              interval: xAxisInterval),
+                          axisNameWidget: Text(xLabel ?? "X",
+                              style: const TextStyle(
+                                  fontSize: 20, fontWeight: FontWeight.bold)),
+                          axisNameSize: 30),
+                      // Adds empty widget for whitespace
+                      rightTitles: AxisTitles(
+                          sideTitles: SideTitles(
+                              showTitles: true,
+                              reservedSize: 20,
+                              getTitlesWidget: (numValue, titleValue) {
+                                return const SizedBox.shrink();
+                              })),
+                    ),
                   ),
                 ),
-              ),
-              // depends on future because the chart size is not known until after the chart is built
-              // TODO Fix for vertical aspect ratios
-              FutureBuilder<Size>(
-                future: Future(() => _chartKey.currentContext!.size!),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const SizedBox.shrink();
-                  } else if (snapshot.hasError) {
-                    return Text("Error: ${snapshot.error}");
-                  } else {
-                    final chartSize = snapshot.data!;
-                    return Transform.translate(
-                      offset:
-                          getRegressionOffset(regressionLocation, chartSize),
-                      child: Text(
-                        regressionText,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          shadows: [
-                            Shadow(
-                                color: Colors.white,
-                                offset: Offset(1, 1),
-                                blurRadius: 1)
-                          ],
+                // depends on future because the chart size is not known until after the chart is built
+                // TODO Fix for vertical aspect ratios
+                FutureBuilder<Size>(
+                  future: Future(() => _chartKey.currentContext!.size!),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const SizedBox.shrink();
+                    } else if (snapshot.hasError) {
+                      return Text("Error: ${snapshot.error}");
+                    } else {
+                      final chartSize = snapshot.data!;
+                      return Transform.translate(
+                        // offset:
+                        //     getRegressionOffset(regressionLocation, chartSize),
+                        offset: Offset(
+                            dotX * chartSize.width, dotY * chartSize.height),
+                        child: Text(
+                          regressionText,
+                          style: const TextStyle(
+                            fontSize: 20,
+                            color: Colors.black,
+                            fontWeight: FontWeight.bold,
+                            shadows: [
+                              Shadow(
+                                  color: Colors.white,
+                                  offset: Offset(1, 1),
+                                  blurRadius: 1)
+                            ],
+                          ),
                         ),
-                      ),
-                    );
-                  }
-                },
-              ),
-            ],
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -450,8 +437,9 @@ class _MyHomePageState extends State<MyHomePage> {
     return Column(
       children: [
         const Divider(),
+        // TODO, precalculate all degrees and store them in a lookup
         CheckboxListTile(
-          enabled: yValues.isNotEmpty,
+            enabled: yValues.isNotEmpty,
             title: const Text("Polynomial Regression"),
             value: selectedRegressionOption == 0,
             onChanged: (value) {
@@ -480,11 +468,11 @@ class _MyHomePageState extends State<MyHomePage> {
                 child: Text("Degree"),
               ),
               Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(6, (index) {
-                    return Padding(
-                      padding: const EdgeInsets.all(8.0),
-                      child: ElevatedButton.icon(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(6, (index) {
+                  return Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: ElevatedButton.icon(
                         icon: PolyDegreeIcon(degree: index),
                         onPressed: () {
                           setState(() {
@@ -493,18 +481,19 @@ class _MyHomePageState extends State<MyHomePage> {
                           _getRegressionEquation();
                         },
                         style: ButtonStyle(
-                          side: WidgetStateProperty.all(const BorderSide(
-                              color: Colors.black, width: 1)),
+                            side: WidgetStateProperty.all(const BorderSide(
+                                color: Colors.black, width: 1)),
                             backgroundColor: polynomialDegree == index
-                                ? WidgetStateProperty.all(regressionLineColor.withOpacity(0.5))
+                                ? WidgetStateProperty.all(
+                                    regressionLineColor.withOpacity(0.5))
                                 : WidgetStateProperty.all(Colors.grey[200])),
-                        label: Text(index.toString(), style: const TextStyle(
-                          color: Colors.black,
-                        ))
-                      ),
-                    );
-                  }),
-                ),
+                        label: Text(index.toString(),
+                            style: const TextStyle(
+                              color: Colors.black,
+                            ))),
+                  );
+                }),
+              ),
             ],
           ),
         CheckboxListTile(
@@ -525,8 +514,25 @@ class _MyHomePageState extends State<MyHomePage> {
             }),
         const Divider(),
         CheckboxListTile(
-          title: const Text('Plot equation'),
+            title: const Text('Regression equation w.r.t. T'),
+            value: isTExpression,
+            enabled: selectedRegressionOption != null,
+            onChanged: (value) {
+              setState(() {
+                isTExpression = value ?? false;
+                if (isTExpression) {
+                  regressionEquationString =
+                      regressionEquationString!.replaceAll("X", "T");
+                } else {
+                  regressionEquationString =
+                      regressionEquationString!.replaceAll("T", "X");
+                }
+              });
+            }),
+        CheckboxListTile(
+          title: const Text('Plot regression equation'),
           value: plotRegressionEquation,
+          enabled: selectedRegressionOption != null,
           onChanged: (value) {
             setState(() {
               plotRegressionEquation = value ?? false;
@@ -536,6 +542,7 @@ class _MyHomePageState extends State<MyHomePage> {
         CheckboxListTile(
           title: const Text('Show equation on graph'),
           value: showRegressionEquation,
+          enabled: selectedRegressionOption != null,
           onChanged: (value) {
             setState(() {
               showRegressionEquation = value ?? false;
@@ -545,6 +552,7 @@ class _MyHomePageState extends State<MyHomePage> {
         CheckboxListTile(
           title: const Text('Show R² on graph'),
           value: showRSquared,
+          enabled: selectedRegressionOption != null,
           onChanged: (value) {
             setState(() {
               showRSquared = value ?? false;
@@ -553,38 +561,84 @@ class _MyHomePageState extends State<MyHomePage> {
         ),
         if (showRegressionEquation || showRSquared)
           ListTile(
+            enabled: selectedRegressionOption != null,
             title: const Text("Regression equation placement:"),
-            trailing: Container(
-                height: 50,
-                width: 50,
-                child: GridView.count(
-                    scrollDirection: Axis.horizontal,
-                    crossAxisCount: 3,
-                    children: List.generate(9, (index) {
-                      return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              regressionLocation =
-                                  RegressionLocation.values[index];
-                            });
-                          },
-                          child: Padding(
-                            padding: const EdgeInsets.all(1.0),
-                            child: Container(
-                              decoration: BoxDecoration(
-                                  border: Border.all(width: 1),
-                                  color: regressionLocation ==
-                                          RegressionLocation.values[index]
-                                      ? Colors.black
-                                      : Colors.grey[200]),
-                            ),
-                          ));
-                    }))),
+            // replace with a container that has a movable dot for relative placement
+            trailing: GestureDetector(
+                onPanUpdate: (details) {
+                  if (selectedRegressionOption == null) {
+                    return;
+                  }
+                  setState(() {
+                    dotX += details.delta.dx / 250;
+                    dotY += details.delta.dy / 250;
+                    dotX = dotX.clamp(0, 1);
+                    dotY = dotY.clamp(0, 1);
+                  });
+                },
+                onTapDown: (details) {
+                  if (selectedRegressionOption == null) {
+                    return;
+                  }
+                  setState(() {
+                    dotX = details.localPosition.dx / 50;
+                    dotY = details.localPosition.dy / 50;
+                  });
+                },
+                child: Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    border: Border.all(width: 1, color: Colors.black),
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned(
+                        left: dotX * 50 - 10,
+                        top: dotY * 50 - 10,
+                        child: const Icon(Icons.circle, size: 20),
+                      ),
+                    ],
+                  ),
+                )),
+            // trailing: Container(
+            //     height: 50,
+            //     width: 50,
+            //     child: GridView.count(
+            //         scrollDirection: Axis.horizontal,
+            //         crossAxisCount: 3,
+            //         children: List.generate(9, (index) {
+            //           return GestureDetector(
+            //               onTap: () {
+            //                 setState(() {
+            //                   regressionLocation =
+            //                       RegressionLocation.values[index];
+            //                 });
+            //               },
+            //               child: Padding(
+            //                 padding: const EdgeInsets.all(1.0),
+            //                 child: Container(
+            //                   decoration: BoxDecoration(
+            //                       border: Border.all(width: 1),
+            //                       color: regressionLocation ==
+            //                               RegressionLocation.values[index]
+            //                           ? Colors.black
+            //                           : Colors.grey[200]),
+            //                 ),
+            //               ));
+            //         }))),
           ),
         const Divider(),
-        Text("Regression equation: ${regressionEquationString ?? ""}",
-            style: const TextStyle(fontSize: 20)),
-        Text("R²: ${rSquared ?? ""}", style: const TextStyle(fontSize: 20)),
+        SelectionArea(
+          child: Column(
+            children: [
+              Text("Regression equation: ${regressionEquationString ?? ""}",
+                  style: const TextStyle(fontSize: 20)),
+              Text("R²: ${rSquared ?? ""}",
+                  style: const TextStyle(fontSize: 20)),
+            ],
+          ),
+        )
       ],
     );
   }
@@ -605,6 +659,56 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       scatterFillColor = color;
     });
+  }
+
+  Widget chartAspectRatioMenu() {
+    return DropdownButton(
+      isExpanded: true,
+      hint: const Row(children: [
+        Icon(Icons.screen_rotation),
+        _kSizedBoxW5,
+        Text('Chart Aspect Ratio')
+      ]),
+      items: const [
+        DropdownMenuItem<int>(
+          value: 0,
+          child: Row(children: [
+            Icon(Icons.crop_portrait_sharp),
+            _kSizedBoxW5,
+            Text('Portrait'),
+          ]),
+        ),
+        DropdownMenuItem<int>(
+          value: 1,
+          child: Row(children: [
+            Icon(Icons.crop_square_sharp),
+            _kSizedBoxW5,
+            Text('Square'),
+          ]),
+        ),
+        DropdownMenuItem<int>(
+          value: 2,
+          child: Row(children: [
+            Icon(Icons.crop_landscape_sharp),
+            _kSizedBoxW5,
+            Text('Landscape'),
+          ]),
+        ),
+      ],
+      value: _aspectRatioMenuValue,
+      onChanged: (value) {
+        setState(() {
+          _aspectRatioMenuValue = value!;
+          if (value == 0) {
+            chartAspectRatio = 0.6;
+          } else if (value == 1) {
+            chartAspectRatio = 1.0;
+          } else if (value == 2) {
+            chartAspectRatio = 1.8;
+          }
+        });
+      },
+    );
   }
 
   Widget titleLabelForm() {
@@ -656,8 +760,8 @@ class _MyHomePageState extends State<MyHomePage> {
       },
       decoration: const InputDecoration(
           border: OutlineInputBorder(),
-          hintText: 'Number of points',
-          labelText: "Number of points"),
+          hintText: 'Data Points',
+          labelText: "Data Points"),
       inputFormatters: [
         LengthLimitingTextInputFormatter(4),
         FilteringTextInputFormatter.digitsOnly,
@@ -957,31 +1061,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ],
         ),
-        Switch(
-            value: isTExpression,
-            onChanged: (bool value) {
-              setState(() {
-                isTExpression = !isTExpression;
-              });
-              if (regressionEquationString != null) {
-                setState(() {
-                  if (isTExpression) {
-                    regressionEquationString =
-                        regressionEquationString!.replaceAll("X", "T");
-                  } else {
-                    regressionEquationString =
-                        regressionEquationString!.replaceAll("T", "X");
-                  }
-                });
-              }
-            },
-            thumbIcon: WidgetStateProperty.resolveWith<Icon>(
-                (Set<WidgetState> states) {
-              if (states.contains(WidgetState.selected)) {
-                return Icon(MdiIcons.alphaT);
-              }
-              return Icon(MdiIcons.alphaX);
-            })),
         Expanded(
           child: ColorPicker(
             borderColor: Colors.black,
@@ -1051,6 +1130,14 @@ class _MyHomePageState extends State<MyHomePage> {
         throw Exception("Y axis is invalid");
       }
     }
+    if (selectedRegressionOption != null) {
+      setState(() {
+        selectedRegressionOption = null;
+        regressionEquationString = null;
+        rSquaredString = null;
+        rSquared = null;
+      });
+    }
     String texExpression;
     try {
       texExpression = '${TeXParser(typedExpression!).parse()}';
@@ -1096,22 +1183,51 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   _makeNoisyData() {
-    final Random random = Random();
-    double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
+    final math.Random random = math.Random();
+    double yMin = yValues.reduce(math.min);
+    double yMax = yValues.reduce(math.max);
+    double yRange = yMax - yMin;
+
     if (yRange == 0) {
-      yRange = yValues.reduce(math.max);
+      yRange = yMax;
     }
+
+    List<double> yValuesWithNoise = yValues.map((y) {
+      int sign = random.nextBool() ? 1 : -1;
+      double noise = random.nextDouble() * yRange * 0.1 * randomnessStrength;
+      noise *= sign;
+      return y + noise;
+    }).toList();
+
+    double yMinNoisy = yValuesWithNoise.reduce(math.min);
+    double yMaxNoisy = yValuesWithNoise.reduce(math.max);
+    double yRangeNoisy = yMaxNoisy - yMinNoisy;
+    // Scale the noisy data to fit within the original range
     setState(() {
-      // TODO Fix this, try to constrain the noise to the range of the data
-      yValuesNoisy = yValues.map((y) {
-        int sign = random.nextBool() ? 1 : -1;
-        double noise =
-            random.nextDouble() * yRange * 0.1 * (randomnessStrength);
-        noise *= sign;
-        return y + noise;
+      yValuesNoisy = yValuesWithNoise.map((y) {
+        return ((y - yMinNoisy) / yRangeNoisy) * yRange + yMin;
       }).toList();
     });
   }
+
+  // _makeNoisyData() {
+  //   final Random random = Random();
+  //   double yRange = yValues.reduce(math.max) - yValues.reduce(math.min);
+  //   if (yRange == 0) {
+  //     yRange = yValues.reduce(math.max);
+  //   }
+  //   setState(() {
+  //     // TODO Fix this, try to constrain the noise to the range of the data
+  //     yValuesNoisy = yValues.map((y) {
+  //       int sign = random.nextBool() ? 1 : -1;
+  //       double noise =
+  //           random.nextDouble() * yRange * 0.1 * (randomnessStrength);
+  //       noise *= sign;
+  //       return y + noise;
+  //     }).toList();
+
+  //   });
+  // }
 
   _filterNoisyData() {
     List<double> newXValues = [];
@@ -1251,21 +1367,21 @@ class _MyHomePageState extends State<MyHomePage> {
       double coefficient;
       if (!term.contains("X") && !term.contains("T")) {
         coefficient = double.parse(term);
-        if (coefficient.abs() <= 0.01) continue;
+        if (coefficient.abs() <= 0.001) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
-        formattedResult += coefficient.abs().toStringAsFixed(2);
+        formattedResult += coefficient.abs().toStringAsFixed(3);
         continue;
       } else if (term.contains("X")) {
         coefficient = double.parse(term.split("X")[0]);
-        if (coefficient.abs() <= 0.01) continue;
+        if (coefficient.abs() <= 0.001) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
-        formattedResult += coefficient.abs().toStringAsFixed(2);
+        formattedResult += coefficient.abs().toStringAsFixed(3);
         formattedResult += "X${term.split("X")[1]}";
       } else if (term.contains("T")) {
         coefficient = double.parse(term.split("T")[0]);
-        if (coefficient.abs() <= 0.01) continue;
+        if (coefficient.abs() <= 0.001) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
-        formattedResult += coefficient.abs().toStringAsFixed(2);
+        formattedResult += coefficient.abs().toStringAsFixed(3);
         formattedResult += "T${term.split("T")[1]}";
       }
     }
