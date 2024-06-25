@@ -75,6 +75,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      themeMode: ThemeMode.system,
       title: 'Scatter Maker',
       theme: ThemeData(
         sliderTheme: const SliderThemeData(
@@ -149,7 +150,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   double randomnessStrength = 0;
 
-  int _aspectRatioMenuValue = 2;
+  int _aspectRatioMenuValue = 4;
   double chartAspectRatio = 1.8;
   List<double> xValues = [];
   List<double> yValues = [];
@@ -245,9 +246,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   ButtonBar(
                     alignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Row(
+                      const Row(
                         children: [
-                          const PaypalDonateButton(),
+                          PaypalDonateButton(),
                           // TODO Add about button to new page
                         ],
                       ),
@@ -280,7 +281,7 @@ class _MyHomePageState extends State<MyHomePage> {
                       : 4,
               child: Center(child: scatterChartGraph()),
             )
-          ])
+          ]),
         ]),
       ),
     ));
@@ -521,7 +522,7 @@ class _MyHomePageState extends State<MyHomePage> {
         const Divider(),
         ExpansionTile(
           enabled: selectedRegressionOption != null,
-          title: Text('Regression Equation Options'),
+          title: const Text('Regression Equation Options'),
           children: [
             CheckboxListTile(
                 title: const Text('Regression equation w.r.t. T'),
@@ -682,16 +683,19 @@ class _MyHomePageState extends State<MyHomePage> {
         _kSizedBoxW5,
         Text('Chart Aspect Ratio')
       ]),
-      items: const [
+      items: [
         DropdownMenuItem<int>(
           value: 0,
           child: Row(children: [
-            Icon(Icons.crop_portrait_sharp, ),
+            Transform.scale(
+              scaleY: 1.25,
+              child: const Icon(Icons.crop_portrait_sharp),
+            ),
             _kSizedBoxW5,
-            Text('Tall'),
+            const Text('Tall'),
           ]),
         ),
-        DropdownMenuItem<int>(
+        const DropdownMenuItem<int>(
           value: 1,
           child: Row(children: [
             Icon(Icons.crop_portrait_sharp),
@@ -699,7 +703,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Text('Portrait'),
           ]),
         ),
-        DropdownMenuItem<int>(
+        const DropdownMenuItem<int>(
           value: 2,
           child: Row(children: [
             Icon(Icons.crop_square_sharp),
@@ -707,7 +711,7 @@ class _MyHomePageState extends State<MyHomePage> {
             Text('Square'),
           ]),
         ),
-        DropdownMenuItem<int>(
+        const DropdownMenuItem<int>(
           value: 3,
           child: Row(children: [
             Icon(Icons.crop_landscape_sharp),
@@ -718,9 +722,12 @@ class _MyHomePageState extends State<MyHomePage> {
         DropdownMenuItem<int>(
           value: 4,
           child: Row(children: [
-            Icon(Icons.crop_landscape_sharp),
+            Transform.scale(
+              scaleX: 1.25,
+              child: const Icon(Icons.crop_landscape_sharp),
+            ),
             _kSizedBoxW5,
-            Text('Wide'),
+            const Text('Wide'),
           ]),
         ),
       ],
