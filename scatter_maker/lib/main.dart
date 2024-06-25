@@ -273,9 +273,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             Flexible(
-              flex: _aspectRatioMenuValue == 0
+              flex: _aspectRatioMenuValue < 2
                   ? 2
-                  : _aspectRatioMenuValue == 1
+                  : _aspectRatioMenuValue == 2
                       ? 3
                       : 4,
               child: Center(child: scatterChartGraph()),
@@ -686,13 +686,21 @@ class _MyHomePageState extends State<MyHomePage> {
         DropdownMenuItem<int>(
           value: 0,
           child: Row(children: [
+            Icon(Icons.crop_portrait_sharp, ),
+            _kSizedBoxW5,
+            Text('Tall'),
+          ]),
+        ),
+        DropdownMenuItem<int>(
+          value: 1,
+          child: Row(children: [
             Icon(Icons.crop_portrait_sharp),
             _kSizedBoxW5,
             Text('Portrait'),
           ]),
         ),
         DropdownMenuItem<int>(
-          value: 1,
+          value: 2,
           child: Row(children: [
             Icon(Icons.crop_square_sharp),
             _kSizedBoxW5,
@@ -700,11 +708,19 @@ class _MyHomePageState extends State<MyHomePage> {
           ]),
         ),
         DropdownMenuItem<int>(
-          value: 2,
+          value: 3,
           child: Row(children: [
             Icon(Icons.crop_landscape_sharp),
             _kSizedBoxW5,
             Text('Landscape'),
+          ]),
+        ),
+        DropdownMenuItem<int>(
+          value: 4,
+          child: Row(children: [
+            Icon(Icons.crop_landscape_sharp),
+            _kSizedBoxW5,
+            Text('Wide'),
           ]),
         ),
       ],
@@ -715,8 +731,12 @@ class _MyHomePageState extends State<MyHomePage> {
           if (value == 0) {
             chartAspectRatio = 0.6;
           } else if (value == 1) {
-            chartAspectRatio = 1.0;
+            chartAspectRatio = 0.8;
           } else if (value == 2) {
+            chartAspectRatio = 1.0;
+          } else if (value == 3) {
+            chartAspectRatio = 1.4;
+          } else {
             chartAspectRatio = 1.8;
           }
         });
