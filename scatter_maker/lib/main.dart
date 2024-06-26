@@ -259,9 +259,7 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Container(
                 child: Column(
                   children: [
-                    const SizedBox(
-                      height: 200,
-                    ),
+                    _kSizedBoxH40,
                     const Text(
                       """The domain values are used to truncate values from the x axis of the chart, they are not required.
 
@@ -328,9 +326,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceAround,
                     children: [
-                      Image(image: portraitAspectRatioImage, width: 400),
-                      Image(image: chartAspectRatioImage, width: 200),
-                      Image(image: landscapeAspectRatioImage, width: 600),
+                      Image(image: portraitAspectRatioImage, width: 300),
+                      Image(image: chartAspectRatioImage, width: 150),
+                      Image(image: landscapeAspectRatioImage, width: 500),
                     ],
                   ),
                 ],
@@ -459,9 +457,9 @@ class _MyHomePageState extends State<MyHomePage> {
         keyTarget: regressionPlacementKey,
         contents: [
           TargetContent(
-            align: ContentAlign.top,
-            child: Container(
-              child: Column(
+            align: ContentAlign.right,
+            child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
                     """Use this to place the regression equation on the relative region of the chart.
@@ -473,17 +471,11 @@ class _MyHomePageState extends State<MyHomePage> {
                     ),
                   ),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Image(image: regressionPlacementImage1, width: 500),
-                      Image(image: regressionPlacementImage2, width: 500),
-                      Image(image: regressionPlacementImage3, width: 500),
-                    ],
-                  )
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children:[Image(image: regressionPlacementImage1, width: 400),
+                  Image(image: regressionPlacementImage3, width: 400),])
                 ],
               ),
-            ),
           ),
         ],
       ),
@@ -523,7 +515,7 @@ class _MyHomePageState extends State<MyHomePage> {
       key: _scaffoldKey,
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.fromLTRB(20, 20, 20, 5),
         child: Column(children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1994,8 +1986,25 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   showTutorial() {
+    setState(() {
+      _aspectRatioMenuValue = 4;
+      chartAspectRatio = 1.8;
+    });
+    int counter = 0;
+    final targets = getTargets();
+    Scrollable.ensureVisible(
+        targets[counter].keyTarget?.currentContext ?? context);
     TutorialCoachMark(
-      targets: getTargets(),
+      onClickTarget: (p0) {
+        counter++;
+        if (counter < targets.length) {
+          Scrollable.ensureVisible(
+              targets[counter].keyTarget?.currentContext ?? context);
+        }
+      },
+      colorShadow: Colors.black,
+      opacityShadow: 1,
+      targets: targets,
       skipWidget: const Text(
         "Skip",
         style: TextStyle(color: Colors.white, fontSize: 30),
