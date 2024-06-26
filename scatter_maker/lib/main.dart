@@ -28,40 +28,45 @@ final intervalFormatters = [
   FilteringTextInputFormatter.allow(RegExp(r'^\d*\.?\d{0,6}')),
 ];
 
-enum RegressionLocation {
-  topLeft,
-  centerLeft,
-  bottomLeft,
-  topCenter,
-  center,
-  bottomCenter,
-  topRight,
-  centerRight,
-  bottomRight,
-}
-
-Offset getRegressionOffset(RegressionLocation location, Size size) {
-  final widthStep = size.width / 9;
-  final heightStep = size.height / 9;
-  switch (location) {
-    case RegressionLocation.topLeft:
-      return Offset(widthStep, heightStep * 2);
-    case RegressionLocation.topCenter:
-      return Offset(widthStep * 4, heightStep * 2);
-    case RegressionLocation.topRight:
-      return Offset(widthStep * 7, heightStep * 2);
-    case RegressionLocation.centerLeft:
-      return Offset(widthStep, heightStep * 4);
-    case RegressionLocation.center:
-      return Offset(widthStep * 4, heightStep * 4);
-    case RegressionLocation.centerRight:
-      return Offset(widthStep * 7, heightStep * 4);
-    case RegressionLocation.bottomLeft:
-      return Offset(widthStep, heightStep * 6);
-    case RegressionLocation.bottomCenter:
-      return Offset(widthStep * 4, heightStep * 6);
-    case RegressionLocation.bottomRight:
-      return Offset(widthStep * 7, heightStep * 6);
+Offset getRegressionOffset(int index, Size size) {
+  final widthStep = size.width / 16;
+  final heightStep = size.height / 16;
+  // goes by column
+  switch (index) {
+    case 0:
+      return Offset(widthStep * 2, heightStep * 2);
+    case 1:
+      return Offset(widthStep * 2, heightStep * 5);
+    case 2:
+      return Offset(widthStep * 2, heightStep * 9);
+    case 3:
+      return Offset(widthStep * 2, heightStep * 13);
+    case 4:
+      return Offset(widthStep * 5, heightStep * 2);
+    case 5:
+      return Offset(widthStep * 5, heightStep * 5);
+    case 6:
+      return Offset(widthStep * 5, heightStep * 9);
+    case 7:
+      return Offset(widthStep * 5, heightStep * 13);
+    case 8:
+      return Offset(widthStep * 9, heightStep * 2);
+    case 9:
+      return Offset(widthStep * 9, heightStep * 5);
+    case 10:
+      return Offset(widthStep * 9, heightStep * 9);
+    case 11:
+      return Offset(widthStep * 9, heightStep * 13);
+    case 12:
+      return Offset(widthStep * 13, heightStep * 2);
+    case 13:
+      return Offset(widthStep * 13, heightStep * 5);
+    case 14:
+      return Offset(widthStep * 13, heightStep * 9);
+    case 15:
+      return Offset(widthStep * 13, heightStep * 13);
+    default:
+      return const Offset(0, 0);
   }
 }
 
@@ -139,10 +144,20 @@ class _MyHomePageState extends State<MyHomePage> {
 
   int? selectedRegressionOption;
   int polynomialDegree = 2;
+
+  int _regressionPrecision = 3;
+  // map between 0-3 and 1-0.001
+  static const Map<int, double> _precisionLookup = {
+    0: 1,
+    1: 0.1,
+    2: 0.01,
+    3: 0.001,
+  };
   bool plotRegressionEquation = true;
   bool showRegressionEquation = true;
   bool showRSquared = true;
-  RegressionLocation regressionLocation = RegressionLocation.topLeft;
+  // RegressionLocation regressionLocation = RegressionLocation.topLeft;
+  int regressionLocationIndex = 5;
   double? rSquared;
   String? rSquaredString;
   String? regressionEquationString;
@@ -181,7 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
             children: [
               const Text("y = ", style: TextStyle(fontSize: 25)),
               Expanded(child: equationField(), flex: 4),
-              _kSizedBoxW40,
+              _kSizedBoxW20,
               Expanded(child: lowerDomainForm()),
               _kSizedBoxW20,
               Expanded(child: upperDomainForm()),
@@ -282,6 +297,66 @@ class _MyHomePageState extends State<MyHomePage> {
               child: Center(child: scatterChartGraph()),
             )
           ]),
+          const Divider(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text('Created by Jonathan Ortega'),
+              Row(
+                children: [
+                  IconButton(
+                      tooltip: 'GitHub',
+                      onPressed: () {
+                        html.window.open(
+                            'https://github.com/jonathanortega2023/scatter_maker',
+                            'blank');
+                      },
+                      icon: Icon(MdiIcons.github)),
+                  IconButton(
+                      tooltip: 'Website',
+                      onPressed: () {
+                        html.window.open('https://jonathan-ortega.me', 'blank');
+                      },
+                      icon: Icon(MdiIcons.web)),
+                  IconButton(
+                    tooltip: 'Info',
+                    icon: const Icon(Icons.info),
+                    onPressed: () {
+                      showAboutDialog(
+                        context: context,
+                        applicationLegalese: "",
+                        applicationName: 'Scatter Maker',
+                        applicationVersion: '1.0.0',
+                        applicationIcon: const ImageIcon(
+                            AssetImage('assets/icons/scatter_maker_logo.png')),
+                        children: [
+                          const Text(
+                              'Scatter Maker is a tool for creating scatter plots with regression lines.'),
+                          const Text(
+                              'It is designed to be simple to use and easy to understand.'),
+                          const Text(
+                              'The tool is free to use and open source. If you like it, please consider donating.'),
+                          const Divider(),
+                          const Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(
+                                'Built with Flutter',
+                                style: TextStyle(color: Colors.black54),
+                              ),
+                              FlutterLogo()
+                            ],
+                          )
+                        ],
+                      );
+                    },
+                  ),
+                  IconButton(
+                      onPressed: () {}, icon: const Icon(Icons.question_mark))
+                ],
+              )
+            ],
+          )
         ]),
       ),
     ));
@@ -338,102 +413,99 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return Screenshot(
       controller: screenshotController,
-      child: Animate(
-        child: Container(
-          constraints: const BoxConstraints(maxHeight: 1200),
-          color: Colors.white,
-          child: AspectRatio(
-            aspectRatio: chartAspectRatio,
-            child: Stack(
-              children: [
-                ScatterChart(
-                  key: _chartKey,
-                  ScatterChartData(
-                    minX: lowerXAxis,
-                    maxX: upperXAxis,
-                    minY: lowerYAxis,
-                    maxY: upperYAxis,
-                    scatterSpots: _getScatterSpots() + _regressionLine(),
-                    scatterTouchData: ScatterTouchData(enabled: false),
-                    showingTooltipIndicators: null,
-                    scatterLabelSettings:
-                        ScatterLabelSettings(showLabel: false),
-                    backgroundColor: Colors.white,
-                    titlesData: FlTitlesData(
-                      show: true,
-                      topTitles: AxisTitles(
-                          axisNameWidget: Text(chartTitle ?? "Title",
-                              style: const TextStyle(
-                                fontSize: 30,
-                              )),
-                          axisNameSize: 60),
-                      leftTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 50,
-                              interval: yAxisInterval),
-                          axisNameWidget: Text(
-                            yLabel ?? "Y",
+      child: Container(
+        constraints: const BoxConstraints(maxHeight: 1200),
+        color: Colors.white,
+        child: AspectRatio(
+          aspectRatio: chartAspectRatio,
+          child: Stack(
+            children: [
+              ScatterChart(
+                key: _chartKey,
+                ScatterChartData(
+                  minX: lowerXAxis,
+                  maxX: upperXAxis,
+                  minY: lowerYAxis,
+                  maxY: upperYAxis,
+                  scatterSpots: _getScatterSpots() + _regressionLine(),
+                  scatterTouchData: ScatterTouchData(enabled: false),
+                  showingTooltipIndicators: null,
+                  scatterLabelSettings: ScatterLabelSettings(showLabel: false),
+                  backgroundColor: Colors.white,
+                  titlesData: FlTitlesData(
+                    show: true,
+                    topTitles: AxisTitles(
+                        axisNameWidget: Text(chartTitle ?? "Title",
                             style: const TextStyle(
-                                fontSize: 20, fontWeight: FontWeight.bold),
-                          ),
-                          axisNameSize: 30),
-                      bottomTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 50,
-                              interval: xAxisInterval),
-                          axisNameWidget: Text(xLabel ?? "X",
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold)),
-                          axisNameSize: 30),
-                      // Adds empty widget for whitespace
-                      rightTitles: AxisTitles(
-                          sideTitles: SideTitles(
-                              showTitles: true,
-                              reservedSize: 20,
-                              getTitlesWidget: (numValue, titleValue) {
-                                return const SizedBox.shrink();
-                              })),
-                    ),
+                              fontSize: 30,
+                            )),
+                        axisNameSize: 60),
+                    leftTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            interval: yAxisInterval),
+                        axisNameWidget: Text(
+                          yLabel ?? "Y",
+                          style: const TextStyle(
+                              fontSize: 20, fontWeight: FontWeight.bold),
+                        ),
+                        axisNameSize: 30),
+                    bottomTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 50,
+                            interval: xAxisInterval),
+                        axisNameWidget: Text(xLabel ?? "X",
+                            style: const TextStyle(
+                                fontSize: 20, fontWeight: FontWeight.bold)),
+                        axisNameSize: 30),
+                    // Adds empty widget for whitespace
+                    rightTitles: AxisTitles(
+                        sideTitles: SideTitles(
+                            showTitles: true,
+                            reservedSize: 20,
+                            getTitlesWidget: (numValue, titleValue) {
+                              return const SizedBox.shrink();
+                            })),
                   ),
                 ),
-                // depends on future because the chart size is not known until after the chart is built
-                // TODO Fix for vertical aspect ratios
-                FutureBuilder<Size>(
-                  future: Future(() => _chartKey.currentContext!.size!),
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return const SizedBox.shrink();
-                    } else if (snapshot.hasError) {
-                      return Text("Error: ${snapshot.error}");
-                    } else {
-                      final chartSize = snapshot.data!;
-                      return Transform.translate(
-                        // offset:
-                        //     getRegressionOffset(regressionLocation, chartSize),
-                        offset: Offset(
-                            dotX * chartSize.width, dotY * chartSize.height),
-                        child: Text(
-                          regressionText,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            color: Colors.black,
-                            fontWeight: FontWeight.bold,
-                            shadows: [
-                              Shadow(
-                                  color: Colors.white,
-                                  offset: Offset(1, 1),
-                                  blurRadius: 1)
-                            ],
-                          ),
+              ),
+              // depends on future because the chart size is not known until after the chart is built
+              // TODO Fix for vertical aspect ratios
+              FutureBuilder<Size>(
+                future: Future(() => _chartKey.currentContext!.size!),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const SizedBox.shrink();
+                  } else if (snapshot.hasError) {
+                    return Text("Error: ${snapshot.error}");
+                  } else {
+                    final chartSize = snapshot.data!;
+                    return Transform.translate(
+                      offset: getRegressionOffset(
+                          regressionLocationIndex, chartSize),
+                      // offset: Offset(
+                      //     dotX * chartSize.width, dotY * chartSize.height),
+                      child: Text(
+                        regressionText,
+                        style: const TextStyle(
+                          fontSize: 20,
+                          color: Colors.black,
+                          fontWeight: FontWeight.bold,
+                          shadows: [
+                            Shadow(
+                                color: Colors.white,
+                                offset: Offset(1, 1),
+                                blurRadius: 1)
+                          ],
                         ),
-                      );
-                    }
-                  },
-                ),
-              ],
-            ),
+                      ),
+                    );
+                  }
+                },
+              ),
+            ],
           ),
         ),
       ),
@@ -524,6 +596,45 @@ class _MyHomePageState extends State<MyHomePage> {
           enabled: selectedRegressionOption != null,
           title: const Text('Regression Equation Options'),
           children: [
+            ListTile(
+              // add option to change decimal precision
+              title: const Text('Adjust regression decimal precision'),
+              trailing: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  IconButton(
+                    onPressed: _regressionPrecision == 0
+                        ? null
+                        : () {
+                            if (_regressionPrecision > 0) {
+                              setState(() {
+                                _regressionPrecision--;
+                              });
+                              _formatPolyEquationString();
+                            }
+                          },
+                    icon: const Icon(Icons.arrow_back),
+                    iconSize: 20,
+                  ),
+                  Text("$_regressionPrecision",
+                      style: const TextStyle(fontSize: 14)),
+                  IconButton(
+                    onPressed: _regressionPrecision == 3
+                        ? null
+                        : () {
+                            if (_regressionPrecision < 3) {
+                              setState(() {
+                                _regressionPrecision++;
+                              });
+                              _formatPolyEquationString();
+                            }
+                          },
+                    icon: const Icon(Icons.arrow_forward),
+                    iconSize: 20,
+                  ),
+                ],
+              ),
+            ),
             CheckboxListTile(
                 title: const Text('Regression equation w.r.t. T'),
                 value: isTExpression,
@@ -577,44 +688,70 @@ class _MyHomePageState extends State<MyHomePage> {
           ListTile(
             enabled: selectedRegressionOption != null,
             title: const Text("Regression equation placement:"),
-            // replace with a container that has a movable dot for relative placement
-            trailing: GestureDetector(
-                onPanUpdate: (details) {
-                  if (selectedRegressionOption == null) {
-                    return;
-                  }
-                  setState(() {
-                    dotX += details.delta.dx / 250;
-                    dotY += details.delta.dy / 250;
-                    dotX = dotX.clamp(0, 1);
-                    dotY = dotY.clamp(0, 1);
-                  });
-                },
-                onTapDown: (details) {
-                  if (selectedRegressionOption == null) {
-                    return;
-                  }
-                  setState(() {
-                    dotX = details.localPosition.dx / 50;
-                    dotY = details.localPosition.dy / 50;
-                  });
-                },
-                child: Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    border: Border.all(width: 1, color: Colors.black),
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: dotX * 50 - 10,
-                        top: dotY * 50 - 10,
-                        child: const Icon(Icons.circle, size: 20),
-                      ),
-                    ],
-                  ),
-                )),
+            dense: false,
+            visualDensity: VisualDensity.comfortable,
+            // 8-direction dpad to move the regression equation around the graph
+            trailing: Container(
+                height: 50,
+                width: 50,
+                child: GridView.count(
+                    scrollDirection: Axis.horizontal,
+                    crossAxisCount: 4,
+                    children: List.generate(16, (index) {
+                      return GestureDetector(
+                          onTap: () {
+                            setState(() {
+                              regressionLocationIndex = index;
+                            });
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.all(0.5),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                  border: Border.all(width: 0.5),
+                                  color: regressionLocationIndex == index
+                                      ? Colors.black
+                                      : Colors.grey[200]),
+                            ),
+                          ));
+                    }))),
+            // trailing: GestureDetector(
+            //     onPanUpdate: (details) {
+            //       if (selectedRegressionOption == null) {
+            //         return;
+            //       }
+            //       setState(() {
+            //         dotX += details.delta.dx / 250;
+            //         dotY += details.delta.dy / 250;
+            //         dotX = dotX.clamp(0, 1);
+            //         dotY = dotY.clamp(0, 1);
+            //       });
+            //     },
+            //     onTapDown: (details) {
+            //       if (selectedRegressionOption == null) {
+            //         return;
+            //       }
+            //       setState(() {
+            //         dotX = details.localPosition.dx / 50;
+            //         dotY = details.localPosition.dy / 50;
+            //       });
+            //     },
+            //     child: Container(
+            //       width: 50,
+            //       height: 50,
+            //       decoration: BoxDecoration(
+            //         border: Border.all(width: 1, color: Colors.black),
+            //       ),
+            //       child: Stack(
+            //         children: [
+            //           Positioned(
+            //             left: dotX * 50 - 10,
+            //             top: dotY * 50 - 10,
+            //             child: const Icon(Icons.circle, size: 20),
+            //           ),
+            //         ],
+            //       ),
+            //     )),
             // trailing: Container(
             //     height: 50,
             //     width: 50,
@@ -759,7 +896,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(), hintText: 'Title', labelText: 'Title'),
+          border: OutlineInputBorder(), labelText: 'Title'),
     );
   }
 
@@ -771,9 +908,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Y label',
-          labelText: 'Y label'),
+          border: OutlineInputBorder(), labelText: 'Y label'),
     );
   }
 
@@ -785,9 +920,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'X label',
-          labelText: 'X label'),
+          border: OutlineInputBorder(), labelText: 'X label'),
     );
   }
 
@@ -799,9 +932,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Data Points',
-          labelText: "Data Points"),
+          border: OutlineInputBorder(), labelText: "Data Points"),
       inputFormatters: [
         LengthLimitingTextInputFormatter(4),
         FilteringTextInputFormatter.digitsOnly,
@@ -828,9 +959,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Y axis interval',
-          labelText: 'Y axis interval'),
+          border: OutlineInputBorder(), labelText: 'Y axis interval'),
       inputFormatters: intervalFormatters,
     );
   }
@@ -850,9 +979,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Y axis max',
-          labelText: 'Y axis max'),
+          border: OutlineInputBorder(), labelText: 'Y axis max'),
       inputFormatters: domainFormatters,
     );
   }
@@ -872,9 +999,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Y axis min',
-          labelText: 'Y axis min'),
+          border: OutlineInputBorder(), labelText: 'Y axis min'),
       inputFormatters: domainFormatters,
     );
   }
@@ -898,9 +1023,7 @@ class _MyHomePageState extends State<MyHomePage> {
         }
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'X axis interval',
-          labelText: 'X axis interval'),
+          border: OutlineInputBorder(), labelText: 'X axis interval'),
       inputFormatters: intervalFormatters,
     );
   }
@@ -927,9 +1050,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'X max',
-          labelText: 'X axis max'),
+          border: OutlineInputBorder(), labelText: 'X axis max'),
       inputFormatters: domainFormatters,
     );
   }
@@ -956,9 +1077,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'X min',
-          labelText: 'X axis min'),
+          border: OutlineInputBorder(), labelText: 'X axis min'),
       inputFormatters: domainFormatters,
     );
   }
@@ -972,9 +1091,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Range max',
-          labelText: 'Range max'),
+          border: OutlineInputBorder(), labelText: 'Range max'),
       inputFormatters: domainFormatters,
     );
   }
@@ -988,9 +1105,7 @@ class _MyHomePageState extends State<MyHomePage> {
         _filterNoisyData();
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Range min',
-          labelText: 'Range min'),
+          border: OutlineInputBorder(), labelText: 'Range min'),
       inputFormatters: domainFormatters,
     );
   }
@@ -1003,9 +1118,7 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Domain max',
-          labelText: 'Domain max'),
+          border: OutlineInputBorder(), labelText: 'Domain max'),
       inputFormatters: domainFormatters,
     );
   }
@@ -1018,16 +1131,16 @@ class _MyHomePageState extends State<MyHomePage> {
         });
       },
       decoration: const InputDecoration(
-          border: OutlineInputBorder(),
-          hintText: 'Domain min',
-          labelText: 'Domain min'),
+        border: OutlineInputBorder(),
+        labelText: 'Domain min',
+      ),
       inputFormatters: domainFormatters,
     );
   }
 
   Widget equationField() {
     return MathField(
-      variables: const ['X', 'T'],
+      variables: const ['X'],
       controller: mathFieldController,
       onChanged: (value) {
         setState(() {
@@ -1039,7 +1152,7 @@ class _MyHomePageState extends State<MyHomePage> {
         hintText: 'Enter an expression w.r.t. X',
         labelText: 'Expression',
       ),
-      opensKeyboard: false,
+      opensKeyboard: true,
     );
   }
 
@@ -1132,13 +1245,17 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void saveChart() {
+    // get current time
+    final now = DateTime.now();
+    final filename =
+        'scatter_chart_${now.hour % 12}_${now.minute}_${now.second}.png';
     screenshotController.capture().then((Uint8List? image) async {
       final blob = html.Blob([image], 'image/png');
       final url = html.Url.createObjectUrlFromBlob(blob);
       final anchor = html.document.createElement('a') as html.AnchorElement
         ..href = url
         ..style.display = 'none'
-        ..download = 'scatter_chart.png';
+        ..download = filename;
       html.document.body!.children.add(anchor);
       anchor.click();
       html.document.body!.children.remove(anchor);
@@ -1199,7 +1316,8 @@ class _MyHomePageState extends State<MyHomePage> {
     setState(() {
       // set x values based on domain and number of points
       xValues = List.generate(
-          numPoints,
+          // numPoints + 1 to include the upper bound
+          numPoints + 1,
           (index) =>
               lowerXAxis + (upperXAxis - lowerXAxis) * index / numPoints);
       // calculate true y values based on expression
@@ -1360,14 +1478,12 @@ class _MyHomePageState extends State<MyHomePage> {
       _calculateRSquared();
 
       // Format the regression equation
-      String stringResult = result.polynomial.format(
-        variable: 'X',
-      );
-      String formattedResult = _formatPolyEquationString(stringResult);
-
       setState(() {
-        regressionEquationString = formattedResult;
+        stringResult = result.polynomial.format(
+          variable: 'X',
+        );
       });
+      _formatPolyEquationString();
     } else if (selectedRegressionOption == 1) {
       // Transform y values by taking the natural logarithm
       List<double> logYValues =
@@ -1400,35 +1516,48 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  String _formatPolyEquationString(String equation) {
+  String? stringResult;
+
+  _formatPolyEquationString() {
+    if (stringResult == null) {
+      return;
+    }
+    double precision = _precisionLookup[_regressionPrecision]!;
     String formattedResult = "";
-    var terms = equation.split(" + ");
+    var terms = stringResult!.split(" + ");
     for (var term in terms) {
       double coefficient;
       if (!term.contains("X") && !term.contains("T")) {
         coefficient = double.parse(term);
-        if (coefficient.abs() <= 0.001) continue;
+        if (coefficient.abs() <= precision) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
-        formattedResult += coefficient.abs().toStringAsFixed(3);
+        formattedResult +=
+            coefficient.abs().toPrecision(_regressionPrecision).toString();
         continue;
       } else if (term.contains("X")) {
         coefficient = double.parse(term.split("X")[0]);
-        if (coefficient.abs() <= 0.001) continue;
+        if (coefficient.abs() <= precision) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
-        formattedResult += coefficient.abs().toStringAsFixed(3);
+        formattedResult +=
+            coefficient.abs().toPrecision(_regressionPrecision).toString();
         formattedResult += "X${term.split("X")[1]}";
       } else if (term.contains("T")) {
         coefficient = double.parse(term.split("T")[0]);
-        if (coefficient.abs() <= 0.001) continue;
+        if (coefficient.abs() <= precision) continue;
         formattedResult += coefficient < 0 ? " - " : " + ";
-        formattedResult += coefficient.abs().toStringAsFixed(3);
+        formattedResult +=
+            coefficient.abs().toPrecision(_regressionPrecision).toString();
         formattedResult += "T${term.split("T")[1]}";
       }
     }
     if (formattedResult.startsWith(" + ")) {
       formattedResult = formattedResult.substring(3);
     }
-    return "Ŷ = $formattedResult";
+    // remove trailing zeroes
+    formattedResult = formattedResult.replaceAll(RegExp(r"(\.0+)(?=\D)"), "");
+    setState(() {
+      regressionEquationString = "Ŷ = $formattedResult";
+    });
   }
 
   void _calculateRSquared() {
@@ -1488,5 +1617,62 @@ class _MyHomePageState extends State<MyHomePage> {
       result.add(ScatterSpot(x, y, radius: 2, color: regressionLineColor));
     }
     return result;
+  }
+}
+
+class RegressionChartText extends StatefulWidget {
+  final String regressionText;
+
+  const RegressionChartText({Key? key, required this.regressionText})
+      : super(key: key);
+  @override
+  State<RegressionChartText> createState() => _RegressionChartTextState();
+}
+
+class _RegressionChartTextState extends State<RegressionChartText> {
+  final GlobalKey _chartKey = GlobalKey();
+  Size? _chartSize;
+  double dotX = 0.5;
+  double dotY = 0.5;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      final size = _chartKey.currentContext!.size;
+      if (size != null) {
+        setState(() {
+          _chartSize = size;
+        });
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: _chartKey,
+      child: _chartSize == null
+          ? const SizedBox.shrink()
+          : Transform.translate(
+              offset:
+                  Offset(dotX * _chartSize!.width, dotY * _chartSize!.height),
+              child: Text(
+                widget.regressionText,
+                style: const TextStyle(
+                  fontSize: 20,
+                  color: Colors.black,
+                  fontWeight: FontWeight.bold,
+                  shadows: [
+                    Shadow(
+                      color: Colors.white,
+                      offset: Offset(1, 1),
+                      blurRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+    );
   }
 }
