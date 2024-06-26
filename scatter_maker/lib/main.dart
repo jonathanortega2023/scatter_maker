@@ -3,6 +3,7 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:math_keyboard/math_keyboard.dart';
 import "package:math_expressions/math_expressions.dart";
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
@@ -10,7 +11,7 @@ import 'package:flex_color_picker/flex_color_picker.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:scatter_maker/widgets/web_ads.dart';
 import 'package:syncfusion_flutter_sliders/sliders.dart';
-import 'package:flutter_animate/flutter_animate.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'dart:html' as html;
 import 'dart:math' as math;
 import 'package:data/data.dart';
@@ -182,6 +183,339 @@ class _MyHomePageState extends State<MyHomePage> {
 
   double dotY = 0.25;
 
+  // tutorial keys
+  final mathFieldKey = GlobalKey();
+  final domainKey = GlobalKey();
+  final numPointsKey = GlobalKey();
+  final chartAspectRatioKey = GlobalKey();
+  final generateDataKey = GlobalKey();
+  final colorPickerKey = GlobalKey();
+  final noiseLevelKey = GlobalKey();
+  final polynomailRegressionKey = GlobalKey();
+  final regressionPlacementKey = GlobalKey();
+  final saveChartKey = GlobalKey();
+
+  final AssetImage mathFieldImage =
+      const AssetImage('assets/tutorial_screenshots/mathFieldKey.png');
+  final AssetImage domainImage =
+      const AssetImage('assets/tutorial_screenshots/domainKey.png');
+  final AssetImage chartAspectRatioImage =
+      const AssetImage('assets/tutorial_screenshots/chartAspectRatioKey.png');
+  final AssetImage portraitAspectRatioImage =
+      const AssetImage('assets/tutorial_screenshots/portraitChart.png');
+  final AssetImage landscapeAspectRatioImage =
+      const AssetImage('assets/tutorial_screenshots/landscapeChart.png');
+  final AssetImage regressionPlacementImage1 = const AssetImage(
+      'assets/tutorial_screenshots/regressionPlacementKey1.png');
+  final AssetImage regressionPlacementImage2 = const AssetImage(
+      'assets/tutorial_screenshots/regressionPlacementKey2.png');
+  final AssetImage regressionPlacementImage3 = const AssetImage(
+      'assets/tutorial_screenshots/regressionPlacementKey3.png');
+  final AssetImage saveChartImage =
+      const AssetImage('assets/tutorial_screenshots/saveChartKey.png');
+
+  List<TargetFocus> getTargets() {
+    return [
+      TargetFocus(
+        identify: "Math Field",
+        keyTarget: mathFieldKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Container(
+              alignment: Alignment.bottomRight,
+              child: Column(
+                children: [
+                  const SizedBox(
+                    height: 200,
+                  ),
+                  const Text(
+                    """The expression box takes in a regular mathematical expression in terms of X.
+                    It also opens an on-screen math keyboard for more advanced inputs.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  _kSizedBoxH40,
+                  Image(
+                    width: 500,
+                    image: mathFieldImage,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Domain",
+        keyTarget: domainKey,
+        contents: [
+          TargetContent(
+              align: ContentAlign.bottom,
+              child: Container(
+                child: Column(
+                  children: [
+                    const SizedBox(
+                      height: 200,
+                    ),
+                    const Text(
+                      """The domain values are used to truncate values from the x axis of the chart, they are not required.
+
+                      Below, the domain max was set to 8.""",
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    _kSizedBoxH20,
+                    Image(image: domainImage, width: 800)
+                  ],
+                ),
+              )),
+        ],
+      ),
+      TargetFocus(
+        identify: "Num Points",
+        keyTarget: numPointsKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Container(
+              child: const Column(
+                children: [
+                  const SizedBox(
+                    height: 200,
+                  ),
+                  const Text(
+                    """The number of points defaults to 200. Modify with caution, as calculating too many points may slow down or crash the page.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Chart Aspect Ratio",
+        keyTarget: chartAspectRatioKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Container(
+              child: Column(
+                children: [
+                  const Text(
+                    """The chart aspect ratio changes the shape of the chart, defaults to wide.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  _kSizedBoxH20,
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceAround,
+                    children: [
+                      Image(image: portraitAspectRatioImage, width: 400),
+                      Image(image: chartAspectRatioImage, width: 200),
+                      Image(image: landscapeAspectRatioImage, width: 600),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Generate Data",
+        keyTarget: generateDataKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Container(
+              child: const Column(
+                children: [
+                  const SizedBox(
+                    height: 200,
+                  ),
+                  const Text(
+                    """Once your chart options are set, click the Generate Data button to plot the regular expression.\n
+                    Most chart options can be modified without regenerating the data.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Color Picker",
+        keyTarget: colorPickerKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.bottom,
+            child: Container(
+              child: const Column(
+                children: [
+                  const SizedBox(
+                    height: 200,
+                  ),
+                  const Text(
+                    """The color picker allows you to change the color of the scatter points, their fill, and the regression line.
+                    Pick an option to modify with the respective button, then choose the color you'd like to use. Arrow resets to default color.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Noise Level",
+        keyTarget: noiseLevelKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.right,
+            child: Container(
+              child: const Column(
+                children: [
+                  const SizedBox(
+                    height: 200,
+                  ),
+                  const Text(
+                    """
+                    The noise level slider adjusts the amount of noise added to the data points.
+                    Noisy data is normalized to stay within the range of the original function.
+
+                    Approximate noise levels / R² values with the appropriate polynomial:
+                    10%-20% -> 0.9 | 30% -> 0.7 | 50%-60% -> 0.5 | 70% -> 0.3
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Polynomial Regression",
+        keyTarget: polynomailRegressionKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.right,
+            child: Container(
+              child: const Column(
+                children: [
+                  const SizedBox(
+                    height: 200,
+                  ),
+                  const Text(
+                    """Polynomial regression is the only option at this time. It can be adjusted to fit any degree from 0-5.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Regression Placement",
+        keyTarget: regressionPlacementKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Container(
+              child: Column(
+                children: [
+                  const Text(
+                    """Use this to place the regression equation on the relative region of the chart.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Image(image: regressionPlacementImage1, width: 500),
+                      Image(image: regressionPlacementImage2, width: 500),
+                      Image(image: regressionPlacementImage3, width: 500),
+                    ],
+                  )
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      TargetFocus(
+        identify: "Save Chart",
+        keyTarget: saveChartKey,
+        contents: [
+          TargetContent(
+            align: ContentAlign.top,
+            child: Container(
+              alignment: Alignment.topCenter,
+              child: Column(
+                children: [
+                  const Text(
+                    """Click the Save Chart button to download the chart as a timestamped image.
+                    """,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  Image(image: saveChartImage, width: 400),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
     return SafeArea(
@@ -301,7 +635,9 @@ class _MyHomePageState extends State<MyHomePage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Created by Jonathan Ortega'),
+              const Text(
+                'Created by Jonathan Ortega',
+              ),
               Row(
                 children: [
                   IconButton(
@@ -331,11 +667,10 @@ class _MyHomePageState extends State<MyHomePage> {
                             AssetImage('assets/icons/scatter_maker_logo.png')),
                         children: [
                           const Text(
-                              'Scatter Maker is a tool for creating scatter plots with regression lines.'),
-                          const Text(
-                              'It is designed to be simple to use and easy to understand.'),
+                              'Scatter Maker is a tool for creating scatter plots, designed while I was teaching HS intro stats.'),
                           const Text(
                               'The tool is free to use and open source. If you like it, please consider donating.'),
+                          _kSizedBoxH20,
                           const Divider(),
                           const Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -351,12 +686,37 @@ class _MyHomePageState extends State<MyHomePage> {
                       );
                     },
                   ),
-                  IconButton(
-                      onPressed: () {}, icon: const Icon(Icons.question_mark))
+                  _kSizedBoxW5,
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      showTutorial();
+                    },
+                    label: const Text('Tutorial'),
+                    icon: const Icon(
+                      Icons.question_mark,
+                      size: 20,
+                    ),
+                    style: ButtonStyle(
+                        backgroundColor: WidgetStateProperty.all(Colors.blue),
+                        foregroundColor: WidgetStateProperty.all(Colors.white)),
+                  ),
+                  // IconButton(
+                  //     tooltip: 'Tutorial',
+                  //     onPressed: () {
+                  //       showTutorial();
+                  //     },
+                  //     icon: const Icon(Icons.question_mark))
                 ],
               )
             ],
-          )
+          ).animate(effects: [
+            const SlideEffect(
+              delay: Duration(milliseconds: 250),
+              duration: Duration(milliseconds: 1000),
+              curve: Curves.bounceOut,
+              begin: Offset(0, 2),
+            )
+          ])
         ]),
       ),
     ));
@@ -365,6 +725,7 @@ class _MyHomePageState extends State<MyHomePage> {
   randomnessSlider() {
     // lock the slider if regression selected
     return AbsorbPointer(
+      key: noiseLevelKey,
       absorbing: yValues.isEmpty,
       child: SfSlider(
         value: randomnessStrength / 10,
@@ -383,7 +744,7 @@ class _MyHomePageState extends State<MyHomePage> {
         min: 0,
         max: 1,
         interval: 0.1,
-        stepSize: 0.1,
+        stepSize: 0.05,
         showTicks: true,
         showLabels: true,
         labelFormatterCallback: (actualValue, formattedText) {
@@ -395,12 +756,18 @@ class _MyHomePageState extends State<MyHomePage> {
 
   IconActionButton saveChartButton() {
     return IconActionButton(
-        text: 'Save Chart', icon: Icons.download, onPressed: saveChart);
+        key: saveChartKey,
+        text: 'Save Chart',
+        icon: Icons.download,
+        onPressed: saveChart);
   }
 
   IconActionButton generateDataButton() {
     return IconActionButton(
-        text: 'Generate Data', icon: Icons.refresh, onPressed: generateData);
+        key: generateDataKey,
+        text: 'Generate Data',
+        icon: Icons.refresh,
+        onPressed: generateData);
   }
 
   Widget scatterChartGraph() {
@@ -518,6 +885,7 @@ class _MyHomePageState extends State<MyHomePage> {
         const Divider(),
         // TODO, precalculate all degrees and store them in a lookup
         CheckboxListTile(
+            key: polynomailRegressionKey,
             enabled: yValues.isNotEmpty,
             title: const Text("Polynomial Regression"),
             value: selectedRegressionOption == 0,
@@ -692,6 +1060,7 @@ class _MyHomePageState extends State<MyHomePage> {
             visualDensity: VisualDensity.comfortable,
             // 8-direction dpad to move the regression equation around the graph
             trailing: Container(
+                key: regressionPlacementKey,
                 height: 50,
                 width: 50,
                 child: GridView.count(
@@ -814,6 +1183,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget chartAspectRatioMenu() {
     return DropdownButton(
+      key: chartAspectRatioKey,
       isExpanded: true,
       hint: const Row(children: [
         Icon(Icons.screen_rotation),
@@ -926,6 +1296,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget pointNumberForm() {
     return TextField(
+      key: numPointsKey,
       onChanged: (text) {
         setState(() {
           numPoints = int.parse(text);
@@ -1125,6 +1496,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget lowerDomainForm() {
     return TextField(
+      key: domainKey,
       onChanged: (text) {
         setState(() {
           lowerDomain = double.parse(text);
@@ -1140,6 +1512,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget equationField() {
     return MathField(
+      key: mathFieldKey,
       variables: const ['X'],
       controller: mathFieldController,
       onChanged: (value) {
@@ -1179,6 +1552,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const Text('|', style: TextStyle(fontSize: 30, color: Colors.grey)),
             ColorPickerActionButton(
+              key: colorPickerKey,
               text: "Point Fill",
               selected: colorPickerIndex == 1,
               onPressed: () {
@@ -1618,61 +1992,14 @@ class _MyHomePageState extends State<MyHomePage> {
     }
     return result;
   }
-}
 
-class RegressionChartText extends StatefulWidget {
-  final String regressionText;
-
-  const RegressionChartText({Key? key, required this.regressionText})
-      : super(key: key);
-  @override
-  State<RegressionChartText> createState() => _RegressionChartTextState();
-}
-
-class _RegressionChartTextState extends State<RegressionChartText> {
-  final GlobalKey _chartKey = GlobalKey();
-  Size? _chartSize;
-  double dotX = 0.5;
-  double dotY = 0.5;
-
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance!.addPostFrameCallback((_) {
-      final size = _chartKey.currentContext!.size;
-      if (size != null) {
-        setState(() {
-          _chartSize = size;
-        });
-      }
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      key: _chartKey,
-      child: _chartSize == null
-          ? const SizedBox.shrink()
-          : Transform.translate(
-              offset:
-                  Offset(dotX * _chartSize!.width, dotY * _chartSize!.height),
-              child: Text(
-                widget.regressionText,
-                style: const TextStyle(
-                  fontSize: 20,
-                  color: Colors.black,
-                  fontWeight: FontWeight.bold,
-                  shadows: [
-                    Shadow(
-                      color: Colors.white,
-                      offset: Offset(1, 1),
-                      blurRadius: 1,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-    );
+  showTutorial() {
+    TutorialCoachMark(
+      targets: getTargets(),
+      skipWidget: const Text(
+        "Skip",
+        style: TextStyle(color: Colors.white, fontSize: 30),
+      ),
+    ).show(context: context);
   }
 }
